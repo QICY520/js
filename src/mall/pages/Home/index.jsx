@@ -5,6 +5,7 @@ import GlassSearchNav from '@/mall/components/GlassSearchNav'
 import HeroCarousel from '@/mall/components/HeroCarousel'
 import CategoryGrid from '@/mall/components/CategoryGrid'
 import ProductWaterfall from '@/mall/components/ProductWaterfall'
+import { HomePageSkeleton } from '@/mall/components/PageSkeleton'
 import { getProducts } from '@/utils/api'
 
 export default function MallHome() {
@@ -67,7 +68,11 @@ export default function MallHome() {
             </span>
           </div>
 
-          <ProductWaterfall products={products} loading={loading} />
+          {loading && products.length === 0 ? (
+            <HomePageSkeleton />
+          ) : (
+            <ProductWaterfall products={products} loading={loading} />
+          )}
         </section>
       </main>
     </MallPageShell>

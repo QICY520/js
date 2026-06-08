@@ -3,20 +3,34 @@ import { SearchBar } from 'antd-mobile'
 import { LinkOutline, ShopbagOutline, UserCircleOutline } from 'antd-mobile-icons'
 import useCartStore from '@/mall/store/useCartStore'
 import useMallUserStore from '@/mall/store/useMallUserStore'
+import useAuthHydration from '@/mall/hooks/useAuthHydration'
 import mallToast from '@/mall/utils/toast'
 
 export default function GlassSearchNav({ onSearch }) {
   const navigate = useNavigate()
-  const user = useMallUserStore((s) => s.user)
+  const { isLoggedIn, user } = useAuthHydration()
   const logout = useMallUserStore((s) => s.logout)
   const cartCount = useCartStore((s) =>
     s.items.reduce((sum, i) => sum + i.quantity, 0),
   )
 
-  const handleLogout = () => {
-    logout()
-    mallToast.info('已退出登录')
-    navigate('/login', { replace: true })
+  const handleCartClick = () => {
+    if (!isLoggedIn) {
+      mallToast.info('请先登录后查看购物车')
+      navigate('/login', { state: { from: '/cart' } })
+      return
+    }
+    navigate('/cart')
+  }
+
+  const handleUserClick = () => {
+    if (isLoggedIn) {
+      logout()
+      mallToast.info('已退出登录')
+      navigate('/login', { replace: true })
+    } else {
+      navigate('/login', { state: { from: '/' } })
+    }
   }
 
   return (
@@ -27,19 +41,17 @@ export default function GlassSearchNav({ onSearch }) {
           <h1 className="text-base font-semibold tracking-tight text-olive-800 shrink-0">
             LUMIÈRE
           </h1>
-          {user && (
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="flex items-center gap-1 text-[10px] text-stone-500 hover:text-olive-600"
-            >
-              <UserCircleOutline fontSize={14} />
-              {user.nickname}
-            </button>
-          )}
           <button
             type="button"
-            onClick={() => navigate('/cart')}
+            onClick={handleUserClick}
+            className="flex items-center gap-1 text-[10px] text-stone-500 hover:text-olive-600 transition-colors"
+          >
+            <UserCircleOutline fontSize={14} />
+            {isLoggedIn ? user?.nickname : '登录'}
+          </button>
+          <button
+            type="button"
+            onClick={handleCartClick}
             className="ml-auto relative text-stone-500 hover:text-olive-600 transition-colors mr-3"
             aria-label="购物车"
           >

@@ -4,14 +4,14 @@ import useAdminStore from '@/admin/store/useAdminStore'
 export const MALL_TOKEN_KEY = 'mall-token'
 export const ADMIN_TOKEN_KEY = 'admin-token'
 
-/** 从 localStorage / Zustand 同步读取前台 Token */
+/** 从 sessionStorage / Zustand 同步读取前台 Token */
 export function getMallToken() {
-  let token = localStorage.getItem(MALL_TOKEN_KEY)
+  let token = sessionStorage.getItem(MALL_TOKEN_KEY)
   if (token) return token
 
   token = useMallUserStore.getState().token
   if (token) {
-    localStorage.setItem(MALL_TOKEN_KEY, token)
+    sessionStorage.setItem(MALL_TOKEN_KEY, token)
     return token
   }
 

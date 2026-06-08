@@ -12,6 +12,7 @@ export const getCategories = () => request.get('/categories')
 
 /** 用户 */
 export const login = (data) => request.post('/login', data)
+export const register = (data) => request.post('/register', data)
 export const getUserInfo = () => request.get('/user/info')
 
 /** 购物车 */

@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { NavBar, CapsuleTabs, Image, Button, DotLoading, Empty } from 'antd-mobile'
+import { NavBar, CapsuleTabs, Image, Button, Empty } from 'antd-mobile'
 import useOrderStore from '@/mall/store/useOrderStore'
 import { getOrders } from '@/utils/api'
 import MallPageShell from '@/mall/components/MallPageShell'
@@ -8,6 +8,7 @@ import {
   ORDER_STATUS_TABS,
   ORDER_STATUS_MAP,
 } from '@/mall/constants/order'
+import { ListPageSkeleton } from '@/mall/components/PageSkeleton'
 import mallToast from '@/mall/utils/toast'
 
 export default function OrdersPage() {
@@ -42,9 +43,7 @@ export default function OrdersPage() {
         </CapsuleTabs>
 
         {loading ? (
-          <div className="flex justify-center py-20 text-olive-600">
-            <DotLoading color="currentColor" />
-          </div>
+          <ListPageSkeleton rows={4} />
         ) : filteredOrders.length === 0 ? (
           <Empty description="暂无订单" className="py-16">
             <Button color="primary" shape="rounded" onClick={() => navigate('/')}>

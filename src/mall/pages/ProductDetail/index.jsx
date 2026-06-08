@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { NavBar, Image, DotLoading, Button } from 'antd-mobile'
+import { NavBar, Image, Button } from 'antd-mobile'
 import { ShopbagOutline } from 'antd-mobile-icons'
 import { getProductById } from '@/utils/api'
 import useCartStore from '@/mall/store/useCartStore'
+import useAuthHydration from '@/mall/hooks/useAuthHydration'
+import { HomePageSkeleton } from '@/mall/components/PageSkeleton'
 import mallToast from '@/mall/utils/toast'
 
 export default function ProductDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { isLoggedIn } = useAuthHydration()
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const addItem = useCartStore((s) => s.addItem)
@@ -20,7 +23,17 @@ export default function ProductDetail() {
       .finally(() => setLoading(false))
   }, [id])
 
+  const requireAuth = (from) => {
+    if (!isLoggedIn) {
+      mallToast.info('请先登录后再购买')
+      navigate('/login', { state: { from } })
+      return false
+    }
+    return true
+  }
+
   const handleAddToCart = () => {
+    if (!requireAuth('/cart')) return
     if (!product || product.stock === 0) {
       mallToast.fail('商品已售罄，暂时无法购买')
       return
@@ -30,6 +43,7 @@ export default function ProductDetail() {
   }
 
   const handleBuyNow = () => {
+    if (!requireAuth('/checkout')) return
     if (!product || product.stock === 0) {
       mallToast.fail('商品已售罄，暂时无法购买')
       return
@@ -39,10 +53,16 @@ export default function ProductDetail() {
     setTimeout(() => navigate('/checkout'), 400)
   }
 
+  const handleCartNav = () => {
+    if (!requireAuth('/cart')) return
+    navigate('/cart')
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-olive-600">
-        <DotLoading color="currentColor" />
+      <div className="min-h-screen bg-cream-50">
+        <NavBar onBack={() => navigate(-1)}>商品详情</NavBar>
+        <HomePageSkeleton />
       </div>
     )
   }
@@ -53,9 +73,7 @@ export default function ProductDetail() {
     <div className="min-h-screen bg-cream-50 pb-24">
       <NavBar
         onBack={() => navigate(-1)}
-        right={
-          <ShopbagOutline fontSize={22} onClick={() => navigate('/cart')} />
-        }
+        right={<ShopbagOutline fontSize={22} onClick={handleCartNav} />}
         className="bg-cream-50/80 backdrop-blur-md"
       >
         商品详情

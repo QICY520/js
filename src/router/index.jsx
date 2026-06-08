@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom'
 import App from '@/App'
-import MallLogin from '@/mall/pages/Login'
+import AuthPage from '@/mall/pages/Auth'
+import MallGuestGuard from '@/mall/components/MallGuestGuard'
 import MallAuthGuard from '@/mall/components/MallAuthGuard'
 import MallHome from '@/mall/pages/Home'
 import ProductDetail from '@/mall/pages/ProductDetail'
@@ -23,10 +24,25 @@ const router = createBrowserRouter([
     path: '/',
     element: <App />,
     children: [
+      /* ── 游客页：登录 / 注册 ── */
       {
         path: 'login',
-        element: <MallLogin />,
+        element: (
+          <MallGuestGuard>
+            <AuthPage defaultTab="login" />
+          </MallGuestGuard>
+        ),
       },
+      {
+        path: 'register',
+        element: (
+          <MallGuestGuard>
+            <AuthPage defaultTab="register" />
+          </MallGuestGuard>
+        ),
+      },
+
+      /* ── 商城：全部需登录 ── */
       {
         element: (
           <MallAuthGuard>
@@ -34,51 +50,23 @@ const router = createBrowserRouter([
           </MallAuthGuard>
         ),
         children: [
-          {
-            index: true,
-            element: <MallHome />,
-          },
-          {
-            path: 'mall',
-            element: <MallHome />,
-          },
-          {
-            path: 'product/:id',
-            element: <ProductDetail />,
-          },
-          {
-            path: 'cart',
-            element: <CartPage />,
-          },
-          {
-            path: 'checkout',
-            element: <CreateOrderPage />,
-          },
-          {
-            path: 'pay/success/:orderId',
-            element: <PaySuccessPage />,
-          },
-          {
-            path: 'orders',
-            element: <OrdersPage />,
-          },
-          {
-            path: 'orders/:id',
-            element: <OrderDetailPage />,
-          },
+          { index: true, element: <MallHome /> },
+          { path: 'mall', element: <MallHome /> },
+          { path: 'product/:id', element: <ProductDetail /> },
+          { path: 'cart', element: <CartPage /> },
+          { path: 'checkout', element: <CreateOrderPage /> },
+          { path: 'pay/success/:orderId', element: <PaySuccessPage /> },
+          { path: 'orders', element: <OrdersPage /> },
+          { path: 'orders/:id', element: <OrderDetailPage /> },
         ],
       },
+
+      /* ── 后台管理 ── */
       {
         path: 'admin',
         children: [
-          {
-            index: true,
-            element: <Navigate to="/admin/login" replace />,
-          },
-          {
-            path: 'login',
-            element: <AdminLogin />,
-          },
+          { index: true, element: <Navigate to="/admin/login" replace /> },
+          { path: 'login', element: <AdminLogin /> },
           {
             path: 'forbidden',
             element: (
@@ -94,10 +82,7 @@ const router = createBrowserRouter([
               </AuthGuard>
             ),
             children: [
-              {
-                index: true,
-                element: <AdminIndexRedirect />,
-              },
+              { index: true, element: <AdminIndexRedirect /> },
               {
                 path: 'products',
                 element: (

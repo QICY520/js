@@ -26,8 +26,9 @@ if (import.meta.env.DEV) {
     const fromHeader = auth.replace(/^Bearer\s+/i, '').trim()
     if (fromHeader) return fromHeader
 
-    // Mock.js 拦截 XHR 时可能丢失 Authorization，从 localStorage 兜底
+    // Mock.js 拦截 XHR 时可能丢失 Authorization，从 storage 兜底
     return (
+      sessionStorage.getItem('mall-token') ||
       localStorage.getItem('mall-token') ||
       localStorage.getItem('admin-token') ||
       ''
@@ -188,7 +189,7 @@ if (import.meta.env.DEV) {
   let products = loadStore(STORAGE_KEYS.products, defaultProducts)
   let cart = loadStore(STORAGE_KEYS.cart, [])
   let orders = loadStore(STORAGE_KEYS.orders, defaultOrders)
-  const users = loadStore(STORAGE_KEYS.users, defaultUsers)
+  let users = loadStore(STORAGE_KEYS.users, defaultUsers)
   let tokens = loadStore(STORAGE_KEYS.tokens, {})
 
   const getUserByToken = (token) => {
@@ -209,6 +210,52 @@ if (import.meta.env.DEV) {
   }
 
   const getProductById = (id) => products.find((p) => p.id === Number(id))
+
+  // ─── 注册接口 ───────────────────────────────────────────────
+  Mock.mock(/\/api\/register$/, 'post', (options) => {
+    const { username, password, nickname } = parseBody(options)
+
+    if (!username || !password) {
+      return fail('用户名和密码不能为空')
+    }
+    if (username.length < 3) {
+      return fail('用户名至少 3 个字符')
+    }
+    if (password.length < 6) {
+      return fail('密码至少 6 位')
+    }
+    if (!/[A-Za-z]/.test(password) || !/\d/.test(password)) {
+      return fail('密码需同时包含字母和数字')
+    }
+    if (users.some((u) => u.username === username)) {
+      return fail('用户名已被注册，请更换')
+    }
+
+    const newId = Math.max(...users.map((u) => u.id), 0) + 1
+    const newUser = {
+      id: newId,
+      username,
+      password,
+      role: 'user',
+      nickname: nickname || username,
+      avatar: `https://picsum.photos/seed/u${newId}/100/100`,
+      permissions: [],
+    }
+    users.push(newUser)
+    saveStore(STORAGE_KEYS.users, users)
+
+    const token = Mock.Random.guid()
+    tokens[token] = newUser.id
+    saveStore(STORAGE_KEYS.tokens, tokens)
+
+    const { password: _, ...safeUser } = newUser
+    return success({
+      token,
+      user: safeUser,
+      role: 'user',
+      permissions: [],
+    }, '注册成功')
+  })
 
   // ─── 登录接口 ───────────────────────────────────────────────
   Mock.mock(/\/api\/login$/, 'post', (options) => {
