@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { NavBar, CapsuleTabs, Image, Button, Empty } from 'antd-mobile'
 import useOrderStore from '@/mall/store/useOrderStore'
 import { getOrders } from '@/utils/api'
@@ -13,9 +13,14 @@ import mallToast from '@/mall/utils/toast'
 
 export default function OrdersPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const orders = useOrderStore((s) => s.orders)
   const syncOrders = useOrderStore((s) => s.syncOrders)
-  const [activeTab, setActiveTab] = useState('all')
+
+  /** 支持 ?status=0|1|2 从「我的」页面跳转预选 Tab */
+  const initialTab = searchParams.get('status')
+  const isValidTab = ORDER_STATUS_TABS.some((t) => t.key === initialTab)
+  const [activeTab, setActiveTab] = useState(isValidTab ? initialTab : 'all')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {

@@ -41,6 +41,7 @@ const useCartStore = create(
                 productId: product.id,
                 skuId,
                 specLabel,
+                categoryId: product.categoryId ?? null,
                 title,
                 price,
                 image,
@@ -141,6 +142,21 @@ const useCartStore = create(
       isAllSelected: () => {
         const { items } = get()
         return items.length > 0 && items.every((i) => i.selected)
+      },
+
+      /** 按分类分组全选 / 取消 */
+      toggleGroupSelect: (categoryId, selected) => {
+        set((state) => ({
+          items: state.items.map((i) =>
+            i.categoryId === categoryId ? { ...i, selected } : i,
+          ),
+        }))
+      },
+
+      /** 指定分类是否全选 */
+      isGroupAllSelected: (categoryId) => {
+        const groupItems = get().items.filter((i) => i.categoryId === categoryId)
+        return groupItems.length > 0 && groupItems.every((i) => i.selected)
       },
     }),
     { name: 'mall-cart-storage' },

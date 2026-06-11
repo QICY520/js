@@ -8,7 +8,7 @@ const TABS = [
   { key: '/', label: '首页', icon: AppOutline, match: (p) => p === '/' || p === '/mall', auth: false },
   { key: '/category', label: '分类', icon: AppstoreOutline, match: (p) => p === '/category', auth: false },
   { key: '/cart', label: '购物车', icon: ShopbagOutline, match: (p) => p === '/cart', auth: true },
-  { key: '/orders', label: '订单', icon: UnorderedListOutline, match: (p) => p.startsWith('/orders'), auth: true },
+  { key: '/my', label: '我的', icon: UnorderedListOutline, match: (p) => p === '/my' || p.startsWith('/orders') || p.startsWith('/addresses'), auth: true },
 ]
 
 export default function MallTabBar() {

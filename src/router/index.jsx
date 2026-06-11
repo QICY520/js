@@ -8,6 +8,8 @@ import SearchPage from '@/mall/pages/Search'
 import CategoryPage from '@/mall/pages/Category'
 import ProductDetail from '@/mall/pages/ProductDetail'
 import CartPage from '@/mall/pages/Cart'
+import MyPage from '@/mall/pages/My'
+import AddressesPage from '@/mall/pages/Addresses'
 import CreateOrderPage from '@/mall/pages/CreateOrder'
 import PaySuccessPage from '@/mall/pages/PaySuccess'
 import OrdersPage from '@/mall/pages/Orders'
@@ -76,6 +78,8 @@ const router = createBrowserRouter([
           { path: 'lifestyle', element: <LifestylePage /> },
           { path: 'gift-card', element: <GiftCardPage /> },
           { path: 'more', element: <MorePage /> },
+          { path: 'my', element: <MyPage /> },
+          { path: 'addresses', element: <AddressesPage /> },
           { path: 'cart', element: <CartPage /> },
           { path: 'checkout', element: <CreateOrderPage /> },
           { path: 'pay/success/:orderId', element: <PaySuccessPage /> },
