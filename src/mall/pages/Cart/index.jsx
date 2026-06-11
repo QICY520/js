@@ -39,7 +39,7 @@ export default function CartPage() {
     if (val >= item.stock) {
       mallToast.info(`「${item.title}」已达库存上限`)
     }
-    setQuantity(item.productId, val)
+    setQuantity(item.lineKey || String(item.productId), val)
   }
 
   return (
@@ -58,16 +58,18 @@ export default function CartPage() {
       ) : (
         <>
           <div className="flex-1 px-4 pt-2 space-y-3">
-            {items.map((item) => (
+            {items.map((item) => {
+              const lineKey = item.lineKey || String(item.productId)
+              return (
               <SwipeAction
-                key={item.productId}
+                key={lineKey}
                 rightActions={[
                   {
                     key: 'delete',
                     text: '删除',
                     color: 'danger',
                     onClick: () => {
-                      removeItem(item.productId)
+                      removeItem(lineKey)
                       mallToast.success('已从购物车移除')
                     },
                   },
@@ -76,7 +78,7 @@ export default function CartPage() {
                 <div className="flex items-center gap-3 p-3 rounded-2xl bg-white border border-cream-200 shadow-sm">
                   <Checkbox
                     checked={item.selected}
-                    onChange={() => toggleSelect(item.productId)}
+                    onChange={() => toggleSelect(lineKey)}
                     style={{ '--icon-size': '20px' }}
                   />
                   <Image
@@ -104,7 +106,7 @@ export default function CartPage() {
                   </div>
                 </div>
               </SwipeAction>
-            ))}
+            )})}
           </div>
 
           <footer className="fixed bottom-16 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-cream-200 px-4 py-3 z-30">

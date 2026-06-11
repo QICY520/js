@@ -64,7 +64,7 @@ export default function GlassSearchNav({ onSearch }) {
           </button>
           <button
             type="button"
-            onClick={() => navigate('/admin/login')}
+            onClick={() => navigate('/admin/products')}
             className="text-stone-400 hover:text-olive-600 transition-colors"
             aria-label="管理后台"
           >

@@ -4,6 +4,11 @@ import useAdminStore from '@/admin/store/useAdminStore'
 export const MALL_TOKEN_KEY = 'mall-token'
 export const ADMIN_TOKEN_KEY = 'admin-token'
 
+/** 管理员角色 */
+export function isAdminRole(role) {
+  return role === 'admin'
+}
+
 /** 从 sessionStorage / Zustand 同步读取前台 Token */
 export function getMallToken() {
   let token = sessionStorage.getItem(MALL_TOKEN_KEY)

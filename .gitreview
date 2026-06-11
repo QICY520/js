@@ -1,0 +1,4 @@
+[gerrit]
+host=gerrit.lilingkun.com
+project=LW-02-11
+defaultbranch=master

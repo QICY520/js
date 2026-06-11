@@ -14,16 +14,20 @@ const useMallUserStore = create(
       user: null,
       token: null,
 
+      establishSession: (token, user) => {
+        persistToken(token)
+        set({ user, token })
+      },
+
       login: async (username, password) => {
         const res = await loginApi({ username, password })
         const { token, user, role } = res.data
 
         if (role !== 'user') {
-          throw new Error('该账号为后台账号，请使用前台用户登录')
+          throw new Error('该账号为管理员，请使用统一登录页登录')
         }
 
-        persistToken(token)
-        set({ user, token })
+        get().establishSession(token, user)
         return res.data
       },
 

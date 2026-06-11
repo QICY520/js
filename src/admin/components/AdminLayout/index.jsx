@@ -3,8 +3,8 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { Layout, Menu, Avatar, Dropdown, Typography, theme } from 'antd'
 import {
   ShopOutlined,
-  AppstoreOutlined,
   ShoppingCartOutlined,
+  HomeOutlined,
   TeamOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -18,7 +18,7 @@ const { Text } = Typography
 
 const ALL_MENU = [
   { key: '/admin/products', icon: <ShopOutlined />, label: '商品管理', permission: 'product' },
-  { key: '/admin/categories', icon: <AppstoreOutlined />, label: '分类管理', permission: 'category' },
+  { key: '/admin/shops', icon: <HomeOutlined />, label: '店铺管理', permission: 'shop' },
   { key: '/admin/orders', icon: <ShoppingCartOutlined />, label: '订单管理', permission: 'order' },
   { key: '/admin/users', icon: <TeamOutlined />, label: '用户管理', permission: 'user' },
 ]
@@ -42,7 +42,7 @@ export default function AdminLayout() {
         label: '退出登录',
         onClick: () => {
           logout()
-          navigate('/admin/login')
+          navigate('/login')
         },
       },
     ],

@@ -1,13 +1,14 @@
 import { useNavigate, useLocation } from 'react-router-dom'
-import { AppOutline, ShopbagOutline, UnorderedListOutline } from 'antd-mobile-icons'
+import { AppOutline, UnorderedListOutline, ShopbagOutline, AppstoreOutline } from 'antd-mobile-icons'
 import useCartStore from '@/mall/store/useCartStore'
 import useAuthHydration from '@/mall/hooks/useAuthHydration'
 import mallToast from '@/mall/utils/toast'
 
 const TABS = [
   { key: '/', label: '首页', icon: AppOutline, match: (p) => p === '/' || p === '/mall', auth: false },
+  { key: '/category', label: '分类', icon: AppstoreOutline, match: (p) => p === '/category', auth: false },
   { key: '/cart', label: '购物车', icon: ShopbagOutline, match: (p) => p === '/cart', auth: true },
-  { key: '/orders', label: '我的订单', icon: UnorderedListOutline, match: (p) => p.startsWith('/orders'), auth: true },
+  { key: '/orders', label: '订单', icon: UnorderedListOutline, match: (p) => p.startsWith('/orders'), auth: true },
 ]
 
 export default function MallTabBar() {

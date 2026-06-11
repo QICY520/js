@@ -9,6 +9,11 @@ const useAdminStore = create(
       user: null,
       token: null,
 
+      establishSession: (token, user, role, permissions = []) => {
+        localStorage.setItem(ADMIN_TOKEN_KEY, token)
+        set({ user: { ...user, role, permissions }, token })
+      },
+
       login: async (username, password) => {
         const res = await loginApi({ username, password })
         const { token, user, role, permissions } = res.data
@@ -17,8 +22,7 @@ const useAdminStore = create(
           throw new Error('该账号为前台用户，无法登录后台')
         }
 
-        localStorage.setItem(ADMIN_TOKEN_KEY, token)
-        set({ user: { ...user, role, permissions }, token })
+        get().establishSession(token, user, role, permissions)
         return res.data
       },
 
@@ -29,8 +33,7 @@ const useAdminStore = create(
 
       hasPermission: (permission) => {
         const { user } = get()
-        if (!user) return false
-        if (user.role === 'admin') return true
+        if (!user || user.role !== 'admin') return false
         return user.permissions?.includes(permission) ?? false
       },
 

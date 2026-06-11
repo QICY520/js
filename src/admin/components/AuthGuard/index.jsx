@@ -1,12 +1,21 @@
 import { Navigate, useLocation } from 'react-router-dom'
-import useAdminStore from '@/admin/store/useAdminStore'
+import useAppAuthHydration from '@/hooks/useAppAuthHydration'
+import { AuthPageSkeleton } from '@/mall/components/PageSkeleton'
 
 export default function AuthGuard({ children }) {
   const location = useLocation()
   const loggedIn = useAdminStore((s) => !!s.token && !!s.user)
 
-  if (!loggedIn) {
-    return <Navigate to="/admin/login" state={{ from: location.pathname }} replace />
+  if (!hydrated) return <AuthPageSkeleton />
+
+  if (!adminLoggedIn) {
+    return (
+      <Navigate
+        to="/login"
+        state={{ from: location.pathname + location.search }}
+        replace
+      />
+    )
   }
 
   return children

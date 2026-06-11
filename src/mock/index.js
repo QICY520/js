@@ -1,4 +1,10 @@
 import Mock from 'mockjs'
+import {
+  MOCK_DATA_VERSION,
+  SEED_MIN_COUNTS,
+  buildSeedBundle,
+  CORE_PRODUCTS,
+} from './seedData'
 
 // ─── 仅在开发环境启用 Mock 拦截 ───────────────────────────────
 if (import.meta.env.DEV) {
@@ -42,6 +48,9 @@ if (import.meta.env.DEV) {
     orders: 'mock_orders',
     users: 'mock_users',
     tokens: 'mock_tokens',
+    shops: 'mock_shops',
+    chats: 'mock_chats',
+    shopFollows: 'mock_shop_follows',
   }
 
   const loadStore = (key, fallback) => {
@@ -59,6 +68,50 @@ if (import.meta.env.DEV) {
 
   const saveStore = (key, data) => {
     localStorage.setItem(key, JSON.stringify(data))
+  }
+
+  const VERSION_KEY = 'mock_data_version'
+
+  const readStoredLength = (key) => {
+    try {
+      const raw = localStorage.getItem(key)
+      if (!raw) return 0
+      const parsed = JSON.parse(raw)
+      return Array.isArray(parsed) ? parsed.length : 0
+    } catch {
+      return 0
+    }
+  }
+
+  const isStaleCache = () =>
+    readStoredLength(STORAGE_KEYS.products) < SEED_MIN_COUNTS.products
+    || readStoredLength(STORAGE_KEYS.shops) < SEED_MIN_COUNTS.shops
+    || readStoredLength(STORAGE_KEYS.users) < SEED_MIN_COUNTS.users
+    || readStoredLength(STORAGE_KEYS.orders) < SEED_MIN_COUNTS.orders
+
+  const clearMockCache = () => {
+    ;[
+      ...Object.values(STORAGE_KEYS),
+      'mock_claimed_coupons',
+      VERSION_KEY,
+    ].forEach((key) => localStorage.removeItem(key))
+  }
+
+  if (localStorage.getItem(VERSION_KEY) !== MOCK_DATA_VERSION || isStaleCache()) {
+    clearMockCache()
+    localStorage.setItem(VERSION_KEY, MOCK_DATA_VERSION)
+    console.info('[Mock] 检测到旧版缓存，已自动清空并重新播种')
+  }
+
+  const seed = buildSeedBundle()
+
+  const loadSeedStore = (key, fallback, minCount = 0) => {
+    const len = readStoredLength(key)
+    if (len >= minCount && len > 0) {
+      return JSON.parse(localStorage.getItem(key))
+    }
+    localStorage.setItem(key, JSON.stringify(fallback))
+    return fallback
   }
 
   // ─── 种子数据：两级分类 ─────────────────────────────────────
@@ -103,93 +156,93 @@ if (import.meta.env.DEV) {
     },
   ]
 
-  // ─── 种子数据：商品列表 ─────────────────────────────────────
-  const defaultProducts = [
-    { id: 1, title: '极简亚麻衬衫', price: 299, stock: 120, categoryId: 101, image: 'https://picsum.photos/seed/p1/400/400', status: 1, desc: '透气亚麻，夏日首选' },
-    { id: 2, title: '羊毛混纺大衣', price: 899, stock: 45, categoryId: 102, image: 'https://picsum.photos/seed/p2/400/400', status: 1, desc: '经典版型，保暖舒适' },
-    { id: 3, title: '真皮编织腰带', price: 199, stock: 80, categoryId: 103, image: 'https://picsum.photos/seed/p3/400/400', status: 1, desc: '手工编织，质感出众' },
-    { id: 4, title: '无线降噪耳机', price: 1299, stock: 200, categoryId: 203, image: 'https://picsum.photos/seed/p4/400/400', status: 1, desc: '主动降噪，续航 30h' },
-    { id: 5, title: '轻薄笔记本电脑', price: 5999, stock: 30, categoryId: 202, image: 'https://picsum.photos/seed/p5/400/400', status: 1, desc: '14 英寸，1.2kg 超轻' },
-    { id: 6, title: '智能手机 Pro', price: 4999, stock: 150, categoryId: 201, image: 'https://picsum.photos/seed/p6/400/400', status: 1, desc: '旗舰芯片，影像系统' },
-    { id: 7, title: '北欧实木餐椅', price: 459, stock: 60, categoryId: 301, image: 'https://picsum.photos/seed/p7/400/400', status: 1, desc: '橡木材质，简约设计' },
-    { id: 8, title: '纯棉四件套', price: 399, stock: 90, categoryId: 302, image: 'https://picsum.photos/seed/p8/400/400', status: 1, desc: '60 支长绒棉，亲肤柔软' },
-    { id: 9, title: '保湿精华液', price: 268, stock: 300, categoryId: 401, image: 'https://picsum.photos/seed/p9/400/400', status: 1, desc: '深层补水，修护屏障' },
-    { id: 10, title: '哑光唇釉套装', price: 158, stock: 500, categoryId: 402, image: 'https://picsum.photos/seed/p10/400/400', status: 1, desc: '三支装，持久不脱色' },
-    { id: 11, title: '休闲运动卫衣', price: 259, stock: 0, categoryId: 101, image: 'https://picsum.photos/seed/p11/400/400', status: 0, desc: '已下架，库存清零' },
-    { id: 12, title: '智能手表', price: 1999, stock: 75, categoryId: 203, image: 'https://picsum.photos/seed/p12/400/400', status: 1, desc: '健康监测，运动追踪' },
+  const defaultShopIdByProduct = Object.fromEntries(
+    CORE_PRODUCTS.map((p) => [p.id, p.shopId]),
+  )
+  const defaultShops = seed.shops
+  const defaultProducts = seed.products
+
+  const defaultHomeBanners = [
+    { id: 1, image: 'https://picsum.photos/seed/banner1/800/400', title: '春季新品', subtitle: '焕新衣橱，遇见更好的自己', themeColor: '#4a6340', themeRgb: '74, 99, 64' },
+    { id: 2, image: 'https://picsum.photos/seed/banner2/800/400', title: '数码盛典', subtitle: '旗舰好物，限时特惠', themeColor: '#325a72', themeRgb: '50, 90, 114' },
+    { id: 3, image: 'https://picsum.photos/seed/banner3/800/400', title: '居家美学', subtitle: '打造你的理想生活空间', themeColor: '#57534e', themeRgb: '87, 83, 78' },
   ]
 
-  // ─── 种子数据：用户与权限 ───────────────────────────────────
-  const defaultUsers = [
-    {
-      id: 1,
-      username: 'admin',
-      password: 'admin123',
-      role: 'admin',
-      nickname: '系统管理员',
-      avatar: 'https://picsum.photos/seed/admin/100/100',
-      permissions: ['product', 'category', 'order', 'user'],
-    },
-    {
-      id: 2,
-      username: 'operator',
-      password: '123456',
-      role: 'operator',
-      nickname: '运营专员',
-      avatar: 'https://picsum.photos/seed/operator/100/100',
-      permissions: ['order'],
-    },
-    {
-      id: 3,
-      username: 'user',
-      password: '123456',
-      role: 'user',
-      nickname: '商城用户',
-      avatar: 'https://picsum.photos/seed/user/100/100',
-      permissions: [],
-    },
-    {
-      id: 4,
-      username: 'test',
-      password: '123456',
-      role: 'test',
-      nickname: '测试账号',
-      avatar: 'https://picsum.photos/seed/test/100/100',
-      permissions: ['product'],
-    },
+  const defaultNavGrid = [
+    { id: 'flash', name: '限时秒杀', icon: 'flash', color: 'from-red-500 to-red-700', link: '/flash-sale' },
+    { id: 'sale', name: '特价', icon: 'sale', color: 'from-amber-400 to-orange-500', link: '/value-sale' },
+    { id: 'rank', name: '排行榜', icon: 'rank', color: 'from-yellow-400 to-amber-500', link: '/ranking' },
+    { id: 'coupon', name: '领券中心', icon: 'coupon', color: 'from-orange-400 to-red-500', link: '/coupon' },
+    { id: 'new', name: '新品首发', icon: 'new', color: 'from-olive-400 to-olive-600', link: '/new-arrivals' },
+    { id: 'farm', name: '品质生活', icon: 'farm', color: 'from-green-400 to-teal-600', link: '/lifestyle' },
+    { id: 'gift', name: '礼品卡', icon: 'gift', color: 'from-pink-400 to-rose-500', link: '/gift-card' },
+    { id: 'more', name: '更多', icon: 'more', color: 'from-stone-400 to-stone-600', link: '/more' },
   ]
 
-  const defaultOrders = [
-    {
-      id: 1,
-      orderNo: '202603060001',
-      userId: 3,
-      status: 1,
-      totalPrice: 299,
-      address: '上海市浦东新区张江路 88 号',
-      createTime: '2026-03-01 10:30:00',
-      payTime: '2026-03-01 10:32:00',
-      items: [{ productId: 1, title: '极简亚麻衬衫', price: 299, quantity: 1, image: 'https://picsum.photos/seed/p1/400/400' }],
-    },
-    {
-      id: 2,
-      orderNo: '202603060002',
-      userId: 3,
-      status: 0,
-      totalPrice: 1299,
-      address: '上海市浦东新区张江路 88 号',
-      createTime: '2026-03-05 14:20:00',
-      payTime: null,
-      items: [{ productId: 4, title: '无线降噪耳机', price: 1299, quantity: 1, image: 'https://picsum.photos/seed/p4/400/400' }],
-    },
+  const getSoldCount = (id) => 3200 + id * 487
+
+  const defaultCoupons = seed.coupons
+
+  let claimedCoupons = loadStore('mock_claimed_coupons', [])
+
+  const defaultGiftCards = seed.giftCards
+
+  const defaultSearchHot = seed.searchHot
+  const defaultSearchGuess = seed.searchGuess
+
+  const defaultHotRankingTabs = [
+    { key: 'fashion', label: '箱包服饰', categoryIds: [101, 102, 103] },
+    { key: 'digital', label: '数码', categoryIds: [201, 202, 203] },
+    { key: 'life', label: '家居美妆', categoryIds: [301, 302, 401, 402] },
   ]
+
+  const buildHotRankings = () => {
+    const tabs = defaultHotRankingTabs.map((tab) => {
+      const list = products
+        .filter((p) => p.status === 1 && tab.categoryIds.includes(p.categoryId))
+        .slice(0, 9)
+        .map((p, index) => ({
+          rank: index + 1,
+          productId: p.id,
+          title: p.title,
+          image: p.image,
+          price: p.price,
+        }))
+      return { ...tab, list }
+    })
+    return tabs
+  }
+
+  const defaultSearchAiPool = [
+    'AI 推荐：适合通勤的极简穿搭',
+    'AI 推荐：高性价比数码配件',
+    'AI 推荐：卧室氛围感好物',
+    'AI 推荐：敏感肌护肤精选',
+    'AI 推荐：送礼不踩雷清单',
+  ]
+
+  const defaultUsers = seed.users
+  const defaultOrders = seed.orders
 
   // 初始化内存仓库（localStorage 持久化，实现前后台数据联动）
   let categories = loadStore(STORAGE_KEYS.categories, defaultCategories)
-  let products = loadStore(STORAGE_KEYS.products, defaultProducts)
+  let products = loadSeedStore(STORAGE_KEYS.products, defaultProducts, SEED_MIN_COUNTS.products).map((p) => ({
+    ...p,
+    shopId: p.shopId || defaultShopIdByProduct[p.id] || 1,
+  }))
+  saveStore(STORAGE_KEYS.products, products)
+  let shops = loadSeedStore(STORAGE_KEYS.shops, defaultShops, SEED_MIN_COUNTS.shops)
+  let chats = loadStore(STORAGE_KEYS.chats, {})
+  let shopFollows = loadStore(STORAGE_KEYS.shopFollows, {})
   let cart = loadStore(STORAGE_KEYS.cart, [])
-  let orders = loadStore(STORAGE_KEYS.orders, defaultOrders)
-  let users = loadStore(STORAGE_KEYS.users, defaultUsers)
+  let orders = loadSeedStore(STORAGE_KEYS.orders, defaultOrders, SEED_MIN_COUNTS.orders)
+  let users = loadSeedStore(STORAGE_KEYS.users, defaultUsers, SEED_MIN_COUNTS.users)
+    .filter((u) => !['operator', 'test'].includes(u.username))
+    .map((u) => ({
+      ...(['operator', 'test'].includes(u.role) ? { ...u, role: 'admin' } : u),
+      permissions: (u.permissions || []).map((p) => (p === 'category' ? 'shop' : p)),
+    }))
+  saveStore(STORAGE_KEYS.users, users)
   let tokens = loadStore(STORAGE_KEYS.tokens, {})
 
   const getUserByToken = (token) => {
@@ -210,6 +263,268 @@ if (import.meta.env.DEV) {
   }
 
   const getProductById = (id) => products.find((p) => p.id === Number(id))
+
+  const getShopById = (id) => shops.find((s) => s.shopId === Number(id))
+
+  const formatChatTime = () =>
+    new Date().toLocaleString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+
+  const getChatKey = (userId, shopId) => `${userId}_${shopId}`
+
+  const getShopAutoReply = (text) => {
+    const t = String(text || '')
+    if (t.includes('发货')) return '亲，本店 48 小时内闪电发货哦~'
+    if (t.includes('优惠')) return '亲，现在下单立减 20 元呢！'
+    if (t.includes('退') || t.includes('换')) return '亲，支持 7 天无理由退换，退货包邮哦~'
+    if (t.includes('尺码') || t.includes('大小')) return '亲，建议参考详情页尺码表，也可以把身高体重发我帮您推荐~'
+    return '亲，收到啦～有需要随时问我，我会尽快为您解答！'
+  }
+
+  const ensureWelcomeMessage = (userId, shopId) => {
+    const key = getChatKey(userId, shopId)
+    if (!chats[key]?.length) {
+      const shop = getShopById(shopId)
+      chats[key] = [
+        {
+          id: Date.now(),
+          shopId: Number(shopId),
+          sender: 'shop',
+          content: `您好，欢迎光临${shop?.shopName || '本店'}～我是店小二，关于尺码、发货或优惠都可以问我哦！`,
+          type: 'text',
+          time: formatChatTime(),
+        },
+      ]
+      saveStore(STORAGE_KEYS.chats, chats)
+    }
+    return chats[key]
+  }
+
+  const PRODUCT_SKU_CONFIG = {
+    1: {
+      groups: [
+        { name: '颜色', key: 'color', values: ['雾霾蓝', '亚麻原色', '炭黑色'], images: { 雾霾蓝: 'https://picsum.photos/seed/shirt-blue/400/400', 亚麻原色: 'https://picsum.photos/seed/shirt-natural/400/400', 炭黑色: 'https://picsum.photos/seed/shirt-black/400/400' } },
+        { name: '尺码', key: 'size', values: ['S', 'M', 'L', 'XL'] },
+      ],
+      priceAdjust: { size: { XL: 20 } },
+      zeroStock: [{ color: '炭黑色', size: 'S' }],
+    },
+    2: {
+      groups: [
+        { name: '颜色', key: 'color', values: ['驼色', '深灰色', '黑色'], images: { 驼色: 'https://picsum.photos/seed/coat-camel/400/400', 深灰色: 'https://picsum.photos/seed/coat-gray/400/400', 黑色: 'https://picsum.photos/seed/coat-black/400/400' } },
+        { name: '尺码', key: 'size', values: ['S', 'M', 'L'] },
+      ],
+      priceAdjust: { size: { L: 50 } },
+      zeroStock: [{ color: '驼色', size: 'S' }],
+    },
+    3: {
+      groups: [
+        { name: '颜色', key: 'color', values: ['经典棕', '曜石黑'], images: { 经典棕: 'https://picsum.photos/seed/belt-brown/400/400', 曜石黑: 'https://picsum.photos/seed/belt-black/400/400' } },
+        { name: '腰围', key: 'size', values: ['100cm', '110cm', '120cm'] },
+      ],
+      priceAdjust: { size: { '120cm': 30 } },
+      zeroStock: [],
+    },
+    4: {
+      groups: [
+        { name: '颜色', key: 'color', values: ['曜石黑', '珍珠白', '星空蓝'], images: { 曜石黑: 'https://picsum.photos/seed/earphone-black/400/400', 珍珠白: 'https://picsum.photos/seed/earphone-white/400/400', 星空蓝: 'https://picsum.photos/seed/earphone-blue/400/400' } },
+        { name: '版本', key: 'edition', values: ['标准版', '降噪加强版'] },
+      ],
+      priceAdjust: { edition: { 降噪加强版: 200 } },
+      zeroStock: [{ color: '星空蓝', edition: '降噪加强版' }],
+    },
+    5: {
+      groups: [
+        { name: '颜色', key: 'color', values: ['深空灰', '月光银'], images: { 深空灰: 'https://picsum.photos/seed/laptop-gray/400/400', 月光银: 'https://picsum.photos/seed/laptop-silver/400/400' } },
+        { name: '配置', key: 'config', values: ['16G+512G', '32G+1TB'] },
+      ],
+      priceAdjust: { config: { '32G+1TB': 1200 } },
+      zeroStock: [{ color: '月光银', config: '32G+1TB' }],
+    },
+    6: {
+      groups: [
+        { name: '颜色', key: 'color', values: ['钛金黑', '云白色', '远峰蓝'], images: { 钛金黑: 'https://picsum.photos/seed/phone-black/400/400', 云白色: 'https://picsum.photos/seed/phone-white/400/400', 远峰蓝: 'https://picsum.photos/seed/phone-blue/400/400' } },
+        { name: '存储', key: 'storage', values: ['128GB', '256GB', '512GB'] },
+      ],
+      priceAdjust: { storage: { '256GB': 500, '512GB': 1000 } },
+      zeroStock: [{ color: '远峰蓝', storage: '512GB' }],
+    },
+    7: {
+      groups: [
+        { name: '材质', key: 'material', values: ['橡木色', '胡桃木色'], images: { 橡木色: 'https://picsum.photos/seed/chair-oak/400/400', 胡桃木色: 'https://picsum.photos/seed/chair-walnut/400/400' } },
+        { name: '尺寸', key: 'size', values: ['标准款', '加宽款'] },
+      ],
+      priceAdjust: { size: { 加宽款: 80 } },
+      zeroStock: [],
+    },
+    8: {
+      groups: [
+        { name: '颜色', key: 'color', values: ['象牙白', '浅咖色', '雾霾蓝'], images: { 象牙白: 'https://picsum.photos/seed/bedding-white/400/400', 浅咖色: 'https://picsum.photos/seed/bedding-beige/400/400', 雾霾蓝: 'https://picsum.photos/seed/bedding-blue/400/400' } },
+        { name: '规格', key: 'spec', values: ['1.5m床', '1.8m床', '2.0m床'] },
+      ],
+      priceAdjust: { spec: { '1.8m床': 50, '2.0m床': 100 } },
+      zeroStock: [{ color: '雾霾蓝', spec: '1.5m床' }],
+    },
+    9: {
+      groups: [
+        { name: '功效', key: 'type', values: ['补水保湿', '修护屏障'], images: { 补水保湿: 'https://picsum.photos/seed/serum-hydrate/400/400', 修护屏障: 'https://picsum.photos/seed/serum-repair/400/400' } },
+        { name: '容量', key: 'volume', values: ['30ml', '50ml', '100ml'] },
+      ],
+      priceAdjust: { volume: { '50ml': 80, '100ml': 180 } },
+      zeroStock: [],
+    },
+    10: {
+      groups: [
+        { name: '色号', key: 'shade', values: ['#01 豆沙红', '#02 枫叶橘', '#03 玫瑰粉'], images: { '#01 豆沙红': 'https://picsum.photos/seed/lip-red/400/400', '#02 枫叶橘': 'https://picsum.photos/seed/lip-orange/400/400', '#03 玫瑰粉': 'https://picsum.photos/seed/lip-pink/400/400' } },
+        { name: '套装', key: 'set', values: ['单支装', '三支礼盒'] },
+      ],
+      priceAdjust: { set: { 三支礼盒: 120 } },
+      zeroStock: [{ shade: '#02 枫叶橘', set: '单支装' }],
+    },
+    11: {
+      groups: [
+        { name: '颜色', key: 'color', values: ['米白色', '深灰色'], images: { 米白色: 'https://picsum.photos/seed/hoodie-white/400/400', 深灰色: 'https://picsum.photos/seed/hoodie-gray/400/400' } },
+        { name: '尺码', key: 'size', values: ['M', 'L', 'XL'] },
+      ],
+      priceAdjust: {},
+      zeroStock: [{ color: '米白色', size: 'M' }, { color: '深灰色', size: 'L' }],
+    },
+    12: {
+      groups: [
+        { name: '表带', key: 'strap', values: ['运动硅胶', '真皮棕', '米兰尼斯'], images: { 运动硅胶: 'https://picsum.photos/seed/watch-sport/400/400', 真皮棕: 'https://picsum.photos/seed/watch-leather/400/400', 米兰尼斯: 'https://picsum.photos/seed/watch-milanese/400/400' } },
+        { name: '尺寸', key: 'size', values: ['42mm', '46mm'] },
+      ],
+      priceAdjust: { size: { '46mm': 200 }, strap: { 米兰尼斯: 150 } },
+      zeroStock: [{ strap: '米兰尼斯', size: '42mm' }],
+    },
+  }
+
+  const buildProductSkus = (product) => {
+    const config = PRODUCT_SKU_CONFIG[product.id]
+    if (!config) {
+      return { specs: [], skus: [], variantImages: {} }
+    }
+
+    const specs = config.groups.map(({ name, key, values }) => ({ name, key, values }))
+    const specKeys = specs.map((s) => s.key)
+
+    const variantImages = {}
+    config.groups.forEach((g) => {
+      if (g.images) variantImages[g.key] = g.images
+    })
+
+    const cartesian = (arrays) =>
+      arrays.reduce((acc, arr) => acc.flatMap((x) => arr.map((y) => [...x, y])), [[]])
+
+    const valueLists = config.groups.map((g) => g.values)
+    const combinations = cartesian(valueLists)
+
+    const isZeroStock = (specMap) =>
+      (config.zeroStock || []).some((z) =>
+        Object.entries(z).every(([k, v]) => specMap[k] === v),
+      )
+
+    const calcPrice = (specMap) => {
+      let price = product.price
+      Object.entries(config.priceAdjust || {}).forEach(([key, map]) => {
+        const delta = map[specMap[key]]
+        if (delta) price += delta
+      })
+      return price
+    }
+
+    const getPreviewImg = (specMap) => {
+      for (const g of config.groups) {
+        if (g.images && specMap[g.key]) return g.images[specMap[g.key]]
+      }
+      return product.image
+    }
+
+    const skus = combinations.map((combo, idx) => {
+      const specMap = Object.fromEntries(specKeys.map((k, i) => [k, combo[i]]))
+      const price = calcPrice(specMap)
+      const combination = combo.join('-')
+      return {
+        id: `${product.id}-${combination}`,
+        combination,
+        specs: specMap,
+        price,
+        originalPrice: price + Math.round(price * 0.15),
+        stock: isZeroStock(specMap) ? 0 : Math.max(5, 20 + product.id - idx),
+        img: getPreviewImg(specMap),
+      }
+    })
+
+    return { specs, skus, variantImages }
+  }
+
+  const buildProductDetail = (product) => {
+    if (!product) return null
+    const endTime = new Date()
+    endTime.setHours(23, 59, 59, 999)
+    const originalPrice = product.originalPrice || Math.round(product.price * 1.35)
+    const repeaters = 280 + product.id * 34
+    const skuData = buildProductSkus(product)
+
+    const shop = getShopById(product.shopId)
+
+    return {
+      ...product,
+      shop,
+      originalPrice,
+      ...skuData,
+      images: [
+        product.image,
+        `https://picsum.photos/seed/p${product.id}b/800/800`,
+        `https://picsum.photos/seed/p${product.id}c/800/800`,
+      ],
+      promotion: {
+        title: product.badgeType === 'promo' ? '618品类周' : '限时特惠',
+        label: '热销爆款',
+        endTime: endTime.getTime(),
+      },
+      soldCount: 3200 + product.id * 487,
+      discountLabel: originalPrice > product.price ? '官方立减15%' : null,
+      serviceTags: [
+        '退货包邮',
+        `回头客${repeaters}人+`,
+        '店铺半年超3千好评',
+        '7天无理由',
+      ],
+      reviews: {
+        total: 86 + product.id * 23,
+        preview: [
+          {
+            id: 1,
+            user: '爱***猫',
+            avatar: `https://picsum.photos/seed/r${product.id}a/80/80`,
+            content: `质感很好，${product.title.slice(0, 6)}比想象中更满意，物流也很快！`,
+            rating: 5,
+          },
+          {
+            id: 2,
+            user: '向***阳',
+            avatar: `https://picsum.photos/seed/r${product.id}b/80/80`,
+            content: '第二次回购了，包装精致，性价比很高，推荐入手。',
+            rating: 5,
+          },
+        ],
+      },
+      qa: [
+        {
+          id: 1,
+          question: '这款适合日常通勤吗？',
+          answer: '很适合，材质轻薄透气，搭配休闲裤很好看。',
+          answerCount: 5,
+        },
+        {
+          id: 2,
+          question: '支持退换货吗？运费谁承担？',
+          answer: '支持7天无理由退换，退货包邮。',
+          answerCount: 3,
+        },
+      ],
+    }
+  }
 
   // ─── 注册接口 ───────────────────────────────────────────────
   Mock.mock(/\/api\/register$/, 'post', (options) => {
@@ -240,6 +555,7 @@ if (import.meta.env.DEV) {
       nickname: nickname || username,
       avatar: `https://picsum.photos/seed/u${newId}/100/100`,
       permissions: [],
+      createdAt: new Date().toISOString().slice(0, 19).replace('T', ' '),
     }
     users.push(newUser)
     saveStore(STORAGE_KEYS.users, users)
@@ -287,6 +603,180 @@ if (import.meta.env.DEV) {
     return success(safeUser)
   })
 
+  // ─── 用户管理（后台） ─────────────────────────────────────────
+  const ALL_PERMISSIONS = ['product', 'shop', 'order', 'user']
+
+  const sanitizeUser = (user) => {
+    if (!user) return null
+    const { password, ...safe } = user
+    return safe
+  }
+
+  const actorCanManageUsers = (actor) =>
+    actor?.role === 'admin' && (actor.permissions?.includes('user') ?? false)
+
+  const actorCanManageOrders = (actor) =>
+    actor?.role === 'admin' && (actor.permissions?.includes('order') ?? false)
+
+  const countAdmins = () => users.filter((u) => u.role === 'admin').length
+
+  const validatePasswordRule = (password) => {
+    if (!password || password.length < 6) return '密码至少 6 位'
+    if (!/[A-Za-z]/.test(password) || !/\d/.test(password)) return '密码需同时包含字母和数字'
+    return null
+  }
+
+  const normalizeUserPayload = (body, { isCreate = false } = {}) => {
+    const role = body.role || 'user'
+    let permissions = Array.isArray(body.permissions) ? [...body.permissions] : []
+
+    if (role === 'user') {
+      permissions = []
+    } else if (role === 'admin') {
+      permissions = permissions.filter((p) => ALL_PERMISSIONS.includes(p))
+    }
+
+    const payload = {
+      nickname: body.nickname?.trim() || body.username,
+      role,
+      permissions,
+    }
+
+    if (isCreate) {
+      payload.username = body.username?.trim()
+      payload.password = body.password
+      payload.avatar = body.avatar || `https://picsum.photos/seed/u${Date.now()}/100/100`
+      payload.createdAt = new Date().toISOString().slice(0, 19).replace('T', ' ')
+    }
+
+    if (body.password) {
+      payload.password = body.password
+    }
+
+    return payload
+  }
+
+  Mock.mock(/\/api\/users(\?.*)?$/, 'get', (options) => {
+    const actor = getUserByToken(parseToken(options))
+    if (!actorCanManageUsers(actor)) return fail('无用户管理权限', 403)
+
+    const url = new URL(options.url, 'http://localhost')
+    const keyword = (url.searchParams.get('keyword') || '').trim()
+    const role = url.searchParams.get('role')
+    const page = Number(url.searchParams.get('page') || 1)
+    const pageSize = Number(url.searchParams.get('pageSize') || 10)
+
+    let list = [...users].sort((a, b) => b.id - a.id)
+
+    if (keyword) {
+      list = list.filter(
+        (u) => u.username.includes(keyword) || u.nickname?.includes(keyword),
+      )
+    }
+
+    if (role === 'user') {
+      list = list.filter((u) => u.role === 'user')
+    } else if (role === 'admin') {
+      list = list.filter((u) => u.role === 'admin')
+    } else if (role) {
+      list = list.filter((u) => u.role === role)
+    }
+
+    const total = list.length
+    const start = (page - 1) * pageSize
+    const pageList = list.slice(start, start + pageSize).map(sanitizeUser)
+
+    return success({ list: pageList, total, page, pageSize })
+  })
+
+  Mock.mock(/\/api\/users\/\d+/, 'get', (options) => {
+    const actor = getUserByToken(parseToken(options))
+    if (!actorCanManageUsers(actor)) return fail('无用户管理权限', 403)
+
+    const id = Number(options.url.match(/\/api\/users\/(\d+)/)?.[1])
+    const user = users.find((u) => u.id === id)
+    if (!user) return fail('用户不存在', 404)
+    return success(sanitizeUser(user))
+  })
+
+  Mock.mock(/\/api\/users$/, 'post', (options) => {
+    const actor = getUserByToken(parseToken(options))
+    if (!actorCanManageUsers(actor)) return fail('无用户管理权限', 403)
+
+    const body = parseBody(options)
+    const payload = normalizeUserPayload(body, { isCreate: true })
+
+    if (!payload.username || !payload.password) {
+      return fail('用户名和密码不能为空')
+    }
+    if (payload.username.length < 3) return fail('用户名至少 3 个字符')
+    if (users.some((u) => u.username === payload.username)) {
+      return fail('用户名已存在')
+    }
+
+    const pwdErr = validatePasswordRule(payload.password)
+    if (pwdErr) return fail(pwdErr)
+
+    const newId = Math.max(...users.map((u) => u.id), 0) + 1
+    const newUser = { id: newId, ...payload }
+    users.push(newUser)
+    saveStore(STORAGE_KEYS.users, users)
+    return success(sanitizeUser(newUser), '用户创建成功')
+  })
+
+  Mock.mock(/\/api\/users\/\d+/, 'put', (options) => {
+    const actor = getUserByToken(parseToken(options))
+    if (!actorCanManageUsers(actor)) return fail('无用户管理权限', 403)
+
+    const id = Number(options.url.match(/\/api\/users\/(\d+)/)?.[1])
+    const body = parseBody(options)
+    const index = users.findIndex((u) => u.id === id)
+    if (index === -1) return fail('用户不存在', 404)
+
+    const current = users[index]
+    const nextRole = body.role ?? current.role
+    const payload = normalizeUserPayload({ ...current, ...body, role: nextRole })
+
+    if (body.password) {
+      const pwdErr = validatePasswordRule(body.password)
+      if (pwdErr) return fail(pwdErr)
+    }
+
+    if (current.role === 'admin' && nextRole !== 'admin' && countAdmins() <= 1) {
+      return fail('不能降级唯一的系统管理员')
+    }
+
+    if (nextRole === 'admin' && !payload.permissions?.length) {
+      return fail('管理员至少需分配一项权限')
+    }
+
+    const updated = { ...current, ...payload, id }
+    if (!body.password) delete updated.password
+    else updated.password = body.password
+
+    users[index] = updated
+    saveStore(STORAGE_KEYS.users, users)
+    return success(sanitizeUser(updated), '用户更新成功')
+  })
+
+  Mock.mock(/\/api\/users\/\d+/, 'delete', (options) => {
+    const actor = getUserByToken(parseToken(options))
+    if (!actorCanManageUsers(actor)) return fail('无用户管理权限', 403)
+
+    const id = Number(options.url.match(/\/api\/users\/(\d+)/)?.[1])
+    const target = users.find((u) => u.id === id)
+    if (!target) return fail('用户不存在', 404)
+
+    if (actor.id === id) return fail('不能删除当前登录账号')
+    if (target.role === 'admin' && countAdmins() <= 1) {
+      return fail('不能删除唯一的系统管理员')
+    }
+
+    users = users.filter((u) => u.id !== id)
+    saveStore(STORAGE_KEYS.users, users)
+    return success(null, '用户删除成功')
+  })
+
   // ─── 分类接口 ───────────────────────────────────────────────
   Mock.mock(/\/api\/categories/, 'get', () => {
     return success(categories)
@@ -316,8 +806,13 @@ if (import.meta.env.DEV) {
     const page = Number(url.searchParams.get('page') || 1)
     const pageSize = Number(url.searchParams.get('pageSize') || 10)
     const status = url.searchParams.get('status')
+    const shopId = url.searchParams.get('shopId')
 
     let list = [...products]
+
+    if (shopId) {
+      list = list.filter((p) => p.shopId === Number(shopId))
+    }
 
     if (categoryId) {
       const cid = Number(categoryId)
@@ -349,7 +844,7 @@ if (import.meta.env.DEV) {
     const id = options.url.match(/\/api\/products\/(\d+)/)?.[1]
     const product = getProductById(id)
     if (!product) return fail('商品不存在', 404)
-    return success(product)
+    return success(buildProductDetail(product))
   })
 
   Mock.mock(/\/api\/products$/, 'post', (options) => {
@@ -361,6 +856,7 @@ if (import.meta.env.DEV) {
       price: body.price,
       stock: body.stock ?? 0,
       categoryId: body.categoryId,
+      shopId: body.shopId || 1,
       image: body.image || `https://picsum.photos/seed/p${newId}/400/400`,
       status: body.status ?? 1,
       desc: body.desc || '',
@@ -385,6 +881,135 @@ if (import.meta.env.DEV) {
     products = products.filter((p) => p.id !== id)
     saveStore(STORAGE_KEYS.products, products)
     return success(null, '商品删除成功')
+  })
+
+  // ─── 店铺接口 ───────────────────────────────────────────────
+  Mock.mock(/\/api\/shops(\?.*)?$/, 'get', () => {
+    const list = shops.map((shop) => ({
+      ...shop,
+      productCount: products.filter((p) => p.shopId === shop.shopId && p.status === 1).length,
+    }))
+    return success(list)
+  })
+
+  Mock.mock(/\/api\/shops\/\d+/, 'get', (options) => {
+    const shopId = Number(options.url.match(/\/api\/shops\/(\d+)/)?.[1])
+    const shop = getShopById(shopId)
+    if (!shop) return fail('店铺不存在', 404)
+
+    const user = getUserByToken(parseToken(options))
+    const followed = user
+      ? (shopFollows[getChatKey(user.id, shopId)] ?? false)
+      : false
+
+    return success({
+      ...shop,
+      followed,
+      productCount: products.filter((p) => p.shopId === shopId && p.status === 1).length,
+    })
+  })
+
+  Mock.mock(/\/api\/shops\/\d+/, 'put', (options) => {
+    const actor = getUserByToken(parseToken(options))
+    if (!actor || actor.role !== 'admin' || !actor.permissions?.includes('shop')) {
+      return fail('无店铺管理权限', 403)
+    }
+
+    const shopId = Number(options.url.match(/\/api\/shops\/(\d+)/)?.[1])
+    const body = parseBody(options)
+    const index = shops.findIndex((s) => s.shopId === shopId)
+    if (index === -1) return fail('店铺不存在', 404)
+
+    shops[index] = {
+      ...shops[index],
+      shopLogo: body.shopLogo ?? shops[index].shopLogo,
+      promoNotice: body.promoNotice ?? shops[index].promoNotice,
+      shopDescription: body.shopDescription ?? shops[index].shopDescription,
+    }
+    saveStore(STORAGE_KEYS.shops, shops)
+    return success(shops[index], '店铺更新成功')
+  })
+
+  Mock.mock(/\/api\/shops\/\d+\/follow/, 'post', (options) => {
+    const user = getUserByToken(parseToken(options))
+    if (!user) return fail('请先登录', 401)
+
+    const shopId = Number(options.url.match(/\/api\/shops\/(\d+)/)?.[1])
+    const shop = getShopById(shopId)
+    if (!shop) return fail('店铺不存在', 404)
+
+    const key = getChatKey(user.id, shopId)
+    const { follow = true } = parseBody(options)
+    shopFollows[key] = follow
+    saveStore(STORAGE_KEYS.shopFollows, shopFollows)
+
+    if (follow) {
+      shops = shops.map((s) =>
+        s.shopId === shopId ? { ...s, fansCount: s.fansCount + 1 } : s,
+      )
+    } else {
+      shops = shops.map((s) =>
+        s.shopId === shopId ? { ...s, fansCount: Math.max(0, s.fansCount - 1) } : s,
+      )
+    }
+    saveStore(STORAGE_KEYS.shops, shops)
+    return success({ followed: follow }, follow ? '关注成功' : '已取消关注')
+  })
+
+  // ─── 客服聊天接口 ───────────────────────────────────────────
+  Mock.mock(/\/api\/chats\/\d+(\?.*)?$/, 'get', (options) => {
+    const user = getUserByToken(parseToken(options))
+    if (!user) return fail('请先登录', 401)
+
+    const shopId = Number(options.url.match(/\/api\/chats\/(\d+)/)?.[1])
+    const shop = getShopById(shopId)
+    if (!shop) return fail('店铺不存在', 404)
+
+    const messages = ensureWelcomeMessage(user.id, shopId)
+    return success({ shop, messages })
+  })
+
+  Mock.mock(/\/api\/chats\/\d+$/, 'post', (options) => {
+    const user = getUserByToken(parseToken(options))
+    if (!user) return fail('请先登录', 401)
+
+    const shopId = Number(options.url.match(/\/api\/chats\/(\d+)/)?.[1])
+    const shop = getShopById(shopId)
+    if (!shop) return fail('店铺不存在', 404)
+
+    const body = parseBody(options)
+    const key = getChatKey(user.id, shopId)
+    ensureWelcomeMessage(user.id, shopId)
+
+    const baseId = Date.now()
+    const userMsg = {
+      id: baseId,
+      shopId,
+      sender: 'user',
+      content: body.content || '',
+      type: body.type || 'text',
+      time: formatChatTime(),
+      product: body.product || null,
+    }
+    chats[key] = [...(chats[key] || []), userMsg]
+
+    const replyText =
+      body.type === 'product'
+        ? `亲，这款「${body.product?.title || '商品'}」很受欢迎呢～现在下单可享店铺优惠！`
+        : getShopAutoReply(body.content)
+
+    const shopMsg = {
+      id: baseId + 1,
+      shopId,
+      sender: 'shop',
+      content: replyText,
+      type: 'text',
+      time: formatChatTime(),
+    }
+    chats[key].push(shopMsg)
+    saveStore(STORAGE_KEYS.chats, chats)
+
+    return success({ messages: chats[key] })
   })
 
   // ─── 购物车接口 ─────────────────────────────────────────────
@@ -545,7 +1170,7 @@ if (import.meta.env.DEV) {
   Mock.mock(/\/api\/orders\/\d+\/status/, 'put', (options) => {
     const user = getUserByToken(parseToken(options))
     if (!user) return fail('请先登录', 401)
-    if (!['admin', 'operator'].includes(user.role)) return fail('无权操作', 403)
+    if (!actorCanManageOrders(user)) return fail('无权操作', 403)
 
     const id = Number(options.url.match(/\/api\/orders\/(\d+)/)?.[1])
     const { status } = parseBody(options)
@@ -557,7 +1182,194 @@ if (import.meta.env.DEV) {
     return success(order, '订单状态已更新')
   })
 
-  console.info('[Mock] 数据中心已启动，Axios 请求将被拦截')
+  // ─── 首页接口 ───────────────────────────────────────────────
+  Mock.mock(/\/api\/home\/banners/, 'get', () => success(defaultHomeBanners))
+
+  Mock.mock(/\/api\/home\/nav-grid/, 'get', () => success(defaultNavGrid))
+
+  Mock.mock(/\/api\/home\/flash-sale/, 'get', () => {
+    const endTime = new Date()
+    endTime.setHours(23, 59, 59, 999)
+    const flashProducts = products
+      .filter((p) => p.status === 1 && p.originalPrice)
+      .slice(0, 12)
+      .map((p) => ({
+        id: p.id,
+        title: p.title,
+        price: p.price,
+        originalPrice: p.originalPrice,
+        image: p.image,
+      }))
+    return success({ endTime: endTime.getTime(), products: flashProducts })
+  })
+
+  // ─── 搜索接口 ───────────────────────────────────────────────
+  Mock.mock(/\/api\/search\/hot/, 'get', () => success(defaultSearchHot))
+
+  Mock.mock(/\/api\/search\/guess/, 'get', () => success(defaultSearchGuess))
+
+  Mock.mock(/\/api\/search\/rankings/, 'get', () => success(buildHotRankings()))
+
+  Mock.mock(/\/api\/search\/suggest(\?.*)?$/, 'get', (options) => {
+    const url = new URL(options.url, 'http://localhost')
+    const keyword = (url.searchParams.get('keyword') || '').trim()
+    if (!keyword) return success([])
+
+    const fromProducts = products
+      .filter((p) => p.status === 1 && p.title.includes(keyword))
+      .slice(0, 4)
+      .map((p) => ({ text: p.title, type: 'product' }))
+
+    const fromAi = defaultSearchAiPool
+      .filter((s) => s.includes(keyword) || keyword.length >= 2)
+      .slice(0, 2)
+      .map((text) => ({ text, type: 'ai' }))
+
+    const fromHot = defaultSearchHot
+      .filter((s) => s.includes(keyword))
+      .slice(0, 3)
+      .map((text) => ({ text, type: 'hot' }))
+
+    const merged = [...fromProducts, ...fromAi, ...fromHot]
+    const unique = merged.filter(
+      (item, index, arr) => arr.findIndex((x) => x.text === item.text) === index,
+    )
+    return success(unique.slice(0, 8))
+  })
+
+  // ─── 金刚区二级页接口 ─────────────────────────────────────────
+  Mock.mock(/\/api\/zone\/flash-sale/, 'get', () => {
+    const endTime = new Date()
+    endTime.setHours(23, 59, 59, 999)
+    const list = products
+      .filter((p) => p.status === 1)
+      .slice(0, 24)
+      .map((p, i) => {
+        const base = p.originalPrice || Math.round(p.price * 1.3)
+        const flashPrice = Math.round(p.price * 0.75)
+        return {
+          ...p,
+          originalPrice: base,
+          flashPrice,
+          soldPercent: 55 + ((p.id + i * 7) % 40),
+          soldCount: getSoldCount(p.id),
+        }
+      })
+    return success({ endTime: endTime.getTime(), list })
+  })
+
+  Mock.mock(/\/api\/zone\/value-sale/, 'get', () => {
+    const list = products
+      .filter((p) => p.status === 1 && p.price <= 268)
+      .map((p) => ({
+        ...p,
+        salePrice: Math.max(Math.round(p.price * 0.6), 19),
+        soldCount: getSoldCount(p.id),
+      }))
+    return success({ list, freeShipping: true })
+  })
+
+  Mock.mock(/\/api\/zone\/ranking/, 'get', () => {
+    const tabs = [
+      { key: 'digital', label: '手机数码', categoryIds: [201, 202, 203] },
+      { key: 'fashion', label: '服饰箱包', categoryIds: [101, 102, 103] },
+      { key: 'life', label: '家居美妆', categoryIds: [301, 302, 401, 402] },
+    ].map((tab) => {
+      const list = products
+        .filter((p) => p.status === 1 && tab.categoryIds.includes(p.categoryId))
+        .map((p) => ({ ...p, soldCount: getSoldCount(p.id) }))
+        .sort((a, b) => b.soldCount - a.soldCount)
+        .slice(0, 10)
+        .map((p, i) => ({ ...p, rank: i + 1 }))
+      return { ...tab, list }
+    })
+    return success(tabs)
+  })
+
+  Mock.mock(/\/api\/zone\/coupons/, 'get', () => success(defaultCoupons))
+
+  Mock.mock(/\/api\/zone\/coupons\/\d+\/claim/, 'post', (options) => {
+    const id = Number(options.url.match(/\/api\/zone\/coupons\/(\d+)\/claim/)?.[1])
+    const coupon = defaultCoupons.find((c) => c.id === id)
+    if (!coupon) return fail('优惠券不存在', 404)
+    if (claimedCoupons.includes(id)) return fail('已领取过该优惠券')
+    claimedCoupons.push(id)
+    saveStore('mock_claimed_coupons', claimedCoupons)
+    return success(coupon, '领取成功')
+  })
+
+  Mock.mock(/\/api\/zone\/new-arrivals/, 'get', () => {
+    const launched = products
+      .filter((p) => p.status === 1)
+      .slice(-6)
+      .reverse()
+      .map((p, i) => ({
+        ...p,
+        launchDate: `2026-06-${String(8 - i).padStart(2, '0')}`,
+        isNew: true,
+      }))
+    const upcoming = [
+      { id: 'u1', title: '夏日凉感床品系列', launchDate: '2026-06-15', image: 'https://picsum.photos/seed/upcoming1/400/300' },
+      { id: 'u2', title: '智能护眼台灯 Pro', launchDate: '2026-06-20', image: 'https://picsum.photos/seed/upcoming2/400/300' },
+    ]
+    return success({ launched, upcoming })
+  })
+
+  Mock.mock(/\/api\/zone\/lifestyle/, 'get', () => {
+    const homeCategoryIds = [301, 302]
+    const list = products
+      .filter((p) => p.status === 1 && homeCategoryIds.includes(p.categoryId))
+      .map((p) => ({
+        ...p,
+        sceneImage: `https://picsum.photos/seed/scene${p.id}/400/500`,
+        recommendBy: ['居家达人小雅', '生活美学家', '品质生活家'][p.id % 3],
+      }))
+    return success({ list })
+  })
+
+  Mock.mock(/\/api\/zone\/gift-cards/, 'get', () => {
+    return success({
+      cards: defaultGiftCards,
+      amounts: [50, 100, 200, 500, 1000],
+    })
+  })
+
+  Mock.mock(/\/api\/zone\/gift-cards\/buy/, 'post', (options) => {
+    const { cardId, amount } = parseBody(options)
+    if (!cardId || !amount) return fail('请选择卡面与面额')
+    return success({ cardId, amount, balanceAdded: amount }, '礼品卡购买成功')
+  })
+
+  Mock.mock(/\/api\/zone\/more/, 'get', () => {
+    return success({
+      categories: categories.map((c) => ({
+        id: c.id,
+        name: c.name,
+        icon: c.name.slice(0, 1),
+        link: `/category?cat=${c.id}`,
+      })),
+      tools: [
+        { id: 'footprint', name: '我的足迹', link: '/orders' },
+        { id: 'favorite', name: '我的收藏', link: '/orders' },
+        { id: 'coupon', name: '优惠券', link: '/coupon' },
+        { id: 'wallet', name: '礼品卡余额', link: '/gift-card' },
+        { id: 'feedback', name: '意见反馈', link: '/more' },
+        { id: 'service', name: '联系客服', link: '/more' },
+      ],
+    })
+  })
+
+  console.info(
+    `[Mock] 数据中心已启动 v${MOCK_DATA_VERSION} · 店铺 ${shops.length} · 商品 ${products.length} · 用户 ${users.length} · 订单 ${orders.length}`,
+  )
+
+  if (import.meta.env.DEV) {
+    window.__RESET_MOCK__ = () => {
+      clearMockCache()
+      localStorage.setItem(VERSION_KEY, MOCK_DATA_VERSION)
+      window.location.reload()
+    }
+  }
 }
 
 export default Mock

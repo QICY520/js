@@ -1,8 +1,11 @@
 import { useState } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { Form, Input, Button } from 'antd-mobile'
 import { UserOutline, LockOutline, SmileOutline } from 'antd-mobile-icons'
 import useMallUserStore from '@/mall/store/useMallUserStore'
+import useAdminStore from '@/admin/store/useAdminStore'
+import { login as loginApi } from '@/utils/api'
+import { isAdminRole } from '@/utils/auth'
 import mallToast from '@/mall/utils/toast'
 import { PASSWORD_RULE, USERNAME_RULES } from '@/mall/constants/validation'
 
@@ -14,7 +17,10 @@ const TABS = [
 export default function AuthPage({ defaultTab = 'login' }) {
   const navigate = useNavigate()
   const location = useLocation()
-  const login = useMallUserStore((s) => s.login)
+  const establishMallSession = useMallUserStore((s) => s.establishSession)
+  const establishAdminSession = useAdminStore((s) => s.establishSession)
+  const logoutMall = useMallUserStore((s) => s.logout)
+  const logoutAdmin = useAdminStore((s) => s.logout)
   const register = useMallUserStore((s) => s.register)
   const [tab, setTab] = useState(defaultTab)
   const [loading, setLoading] = useState(false)
@@ -36,7 +42,25 @@ export default function AuthPage({ defaultTab = 'login' }) {
   const handleLogin = async (values) => {
     setLoading(true)
     try {
-      await login(values.username, values.password)
+      const res = await loginApi({
+        username: values.username,
+        password: values.password,
+      })
+      const { token, user, role, permissions } = res.data
+
+      if (isAdminRole(role)) {
+        logoutMall()
+        establishAdminSession(token, user, role, permissions)
+        mallToast.success('管理员登录成功，正在进入后台…')
+        const from = location.state?.from
+        const adminTarget =
+          from && from.startsWith('/admin') && from !== '/admin/forbidden' ? from : '/admin/products'
+        setTimeout(() => navigate(adminTarget, { replace: true }), 300)
+        return
+      }
+
+      logoutAdmin()
+      establishMallSession(token, user)
       mallToast.success('登录成功，欢迎回来！')
       redirectAfterAuth()
     } catch (err) {
@@ -227,12 +251,20 @@ export default function AuthPage({ defaultTab = 'login' }) {
               )}
 
               {tab === 'login' && (
-                <div className="mt-5 pt-4 border-t border-cream-200">
-                  <p className="text-xs text-stone-400 mb-1">演示账号</p>
+                <div className="mt-5 pt-4 border-t border-cream-200 space-y-2">
+                  <p className="text-xs text-stone-400">演示账号</p>
                   <p className="text-xs text-stone-500">
-                    <code className="bg-cream-100 px-1.5 py-0.5 rounded">user</code>
+                    商城用户：
+                    <code className="bg-cream-100 px-1.5 py-0.5 rounded ml-1">user</code>
                     {' / '}
                     <code className="bg-cream-100 px-1.5 py-0.5 rounded">123456</code>
+                  </p>
+                  <p className="text-xs text-stone-500">
+                    管理员：
+                    <code className="bg-cream-100 px-1.5 py-0.5 rounded ml-1">admin</code>
+                    {' / '}
+                    <code className="bg-cream-100 px-1.5 py-0.5 rounded">admin123</code>
+                    <span className="text-stone-400 ml-1">（登录后进入后台）</span>
                   </p>
                 </div>
               )}
@@ -259,9 +291,7 @@ export default function AuthPage({ defaultTab = 'login' }) {
         </div>
 
         <p className="text-center text-xs text-stone-400 pb-4">
-          <Link to="/admin/login" className="hover:text-olive-600">
-            管理后台入口 →
-          </Link>
+          登录后自动识别身份：普通用户进入商城，管理员进入后台
         </p>
       </div>
     </div>

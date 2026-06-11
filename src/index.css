@@ -87,6 +87,15 @@
     padding-bottom: env(safe-area-inset-bottom, 12px);
   }
 
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
   .animate-toast-in {
     animation: toast-in 0.25s ease-out;
   }
@@ -100,5 +109,29 @@
       opacity: 1;
       transform: scale(1) translateY(0);
     }
+  }
+
+  /* 金刚区图标悬停扫光 */
+  .nav-icon-shine {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .nav-icon-shine::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      105deg,
+      transparent 40%,
+      rgba(255, 255, 255, 0.45) 50%,
+      transparent 60%
+    );
+    transform: translateX(-120%);
+    transition: transform 0.5s ease;
+  }
+
+  .group:hover .nav-icon-shine::after {
+    transform: translateX(120%);
   }
 }

@@ -19,6 +19,7 @@ import { PlusOutlined, SearchOutlined, EditOutlined, DeleteOutlined } from '@ant
 import {
   getProducts,
   getCategories,
+  getShops,
   createProduct,
   updateProduct,
   deleteProduct,
@@ -29,9 +30,11 @@ const { Title } = Typography
 export default function ProductManagement() {
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
+  const [shops, setShops] = useState([])
   const [loading, setLoading] = useState(false)
   const [keyword, setKeyword] = useState('')
   const [searchValue, setSearchValue] = useState('')
+  const [shopFilter, setShopFilter] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState(null)
   const [submitting, setSubmitting] = useState(false)
@@ -47,14 +50,18 @@ export default function ProductManagement() {
   const fetchProducts = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await getProducts({ keyword, pageSize: 100 })
+      const res = await getProducts({
+        keyword,
+        shopId: shopFilter || undefined,
+        pageSize: 100,
+      })
       setProducts(res.data.list)
     } catch {
       message.error('加载商品失败')
     } finally {
       setLoading(false)
     }
-  }, [keyword])
+  }, [keyword, shopFilter])
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -65,15 +72,25 @@ export default function ProductManagement() {
     }
   }, [])
 
+  const fetchShops = useCallback(async () => {
+    try {
+      const res = await getShops()
+      setShops(res.data)
+    } catch {
+      message.error('加载店铺失败')
+    }
+  }, [])
+
   useEffect(() => {
     fetchProducts()
     fetchCategories()
-  }, [fetchProducts, fetchCategories])
+    fetchShops()
+  }, [fetchProducts, fetchCategories, fetchShops])
 
   const openCreate = () => {
     setEditingProduct(null)
     form.resetFields()
-    form.setFieldsValue({ status: 1, stock: 0 })
+    form.setFieldsValue({ status: 1, stock: 0, shopId: shops[0]?.shopId })
     setModalOpen(true)
   }
 
@@ -84,6 +101,7 @@ export default function ProductManagement() {
       price: record.price,
       stock: record.stock,
       categoryId: record.categoryId,
+      shopId: record.shopId,
       image: record.image,
       desc: record.desc,
       status: record.status,
@@ -150,6 +168,12 @@ export default function ProductManagement() {
       width: 80,
     },
     {
+      title: '所属店铺',
+      dataIndex: 'shopId',
+      width: 120,
+      render: (shopId) => shops.find((s) => s.shopId === shopId)?.shopName || shopId,
+    },
+    {
       title: '分类',
       dataIndex: 'categoryId',
       width: 120,
@@ -207,6 +231,14 @@ export default function ProductManagement() {
             商品管理
           </Title>
           <Space wrap>
+            <Select
+              allowClear
+              placeholder="按店铺筛选"
+              value={shopFilter || undefined}
+              onChange={(val) => setShopFilter(val || '')}
+              options={shops.map((s) => ({ value: s.shopId, label: s.shopName }))}
+              style={{ width: 160 }}
+            />
             <Input.Search
               placeholder="搜索商品名称"
               allowClear
@@ -270,6 +302,17 @@ export default function ProductManagement() {
               <InputNumber min={0} className="w-full" placeholder="0" />
             </Form.Item>
           </Space>
+
+          <Form.Item
+            name="shopId"
+            label="所属店铺"
+            rules={[{ required: true, message: '请选择店铺' }]}
+          >
+            <Select
+              placeholder="请选择店铺"
+              options={shops.map((s) => ({ value: s.shopId, label: s.shopName }))}
+            />
+          </Form.Item>
 
           <Form.Item
             name="categoryId"

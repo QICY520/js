@@ -1,6 +1,23 @@
 import { useMemo } from 'react'
-import { DotLoading } from 'antd-mobile'
 import ProductCard from '@/mall/components/ProductCard'
+import Bone from '@/mall/components/PageSkeleton'
+
+function ProductGridSkeleton() {
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div key={i} className="rounded-2xl bg-white overflow-hidden border border-cream-200/80">
+          <Bone className="h-40 w-full rounded-none" />
+          <div className="p-3 space-y-2">
+            <Bone className="h-3 w-full" />
+            <Bone className="h-3 w-2/3" />
+            <Bone className="h-5 w-1/3" />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
 
 export default function ProductWaterfall({ products, loading }) {
   const [leftCol, rightCol] = useMemo(() => {
@@ -13,15 +30,11 @@ export default function ProductWaterfall({ products, loading }) {
     return [left, right]
   }, [products])
 
-  if (loading) {
-    return (
-      <div className="flex justify-center py-16 text-olive-600">
-        <DotLoading color="currentColor" />
-      </div>
-    )
+  if (loading && products.length === 0) {
+    return <ProductGridSkeleton />
   }
 
-  if (!products.length) {
+  if (!loading && !products.length) {
     return (
       <div className="text-center py-16 text-stone-400 text-sm">
         暂无商品，换个关键词试试

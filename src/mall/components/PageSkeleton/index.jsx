@@ -57,4 +57,24 @@ export function ListPageSkeleton({ rows = 3 }) {
   )
 }
 
+export function CategoryPageSkeleton() {
+  return (
+    <div className="flex min-h-[60vh]">
+      <div className="w-24 shrink-0 bg-cream-100 p-2 space-y-2">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Bone key={i} className="h-10 w-full rounded-lg" />
+        ))}
+      </div>
+      <div className="flex-1 p-3 space-y-3">
+        <Bone className="h-6 w-1/3" />
+        <div className="grid grid-cols-2 gap-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Bone key={i} className="h-36 w-full rounded-2xl" />
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default Bone

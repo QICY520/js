@@ -1,22 +1,36 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { NavBar, Image, Button } from 'antd-mobile'
-import { ShopbagOutline } from 'antd-mobile-icons'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { getProductById } from '@/utils/api'
 import useCartStore from '@/mall/store/useCartStore'
 import useAuthHydration from '@/mall/hooks/useAuthHydration'
 import { HomePageSkeleton } from '@/mall/components/PageSkeleton'
+import ImmersiveHeader from '@/mall/components/productDetail/ImmersiveHeader'
+import ProductGallery from '@/mall/components/productDetail/ProductGallery'
+import PromotionBar from '@/mall/components/productDetail/PromotionBar'
+import PriceBlock from '@/mall/components/productDetail/PriceBlock'
+import TitleBlock from '@/mall/components/productDetail/TitleBlock'
+import ReviewSection from '@/mall/components/productDetail/ReviewSection'
+import AskEveryone from '@/mall/components/productDetail/AskEveryone'
+import DetailBottomBar from '@/mall/components/productDetail/DetailBottomBar'
+import SkuPickerPopup from '@/mall/components/productDetail/SkuPickerPopup'
+import SectionDivider from '@/mall/components/productDetail/SectionDivider'
+import { buildCartLineKey } from '@/mall/utils/sku'
 import mallToast from '@/mall/utils/toast'
 
 export default function ProductDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
+  const zoneState = location.state || {}
   const { isLoggedIn } = useAuthHydration()
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [skuVisible, setSkuVisible] = useState(false)
+  const [skuAction, setSkuAction] = useState('cart')
   const addItem = useCartStore((s) => s.addItem)
 
   useEffect(() => {
+    setLoading(true)
     getProductById(id)
       .then((res) => setProduct(res.data))
       .catch(() => mallToast.fail('商品不存在或已下架'))
@@ -32,25 +46,37 @@ export default function ProductDetail() {
     return true
   }
 
-  const handleAddToCart = () => {
-    if (!requireAuth('/cart')) return
+  const openSkuPicker = (action) => {
+    if (!requireAuth(action === 'buy' ? '/checkout' : '/cart')) return
     if (!product || product.stock === 0) {
       mallToast.fail('商品已售罄，暂时无法购买')
       return
     }
-    addItem(product, 1)
-    mallToast.success(`「${product.title}」已加入购物车`)
+    setSkuAction(action)
+    setSkuVisible(true)
   }
 
-  const handleBuyNow = () => {
-    if (!requireAuth('/checkout')) return
-    if (!product || product.stock === 0) {
-      mallToast.fail('商品已售罄，暂时无法购买')
-      return
+  const handleSkuConfirm = ({ sku, quantity, specLabel, selected }) => {
+    const specKeys = (product.specs || []).map((s) => s.key)
+    const lineKey = buildCartLineKey(product.id, selected, specKeys)
+
+    const finalPrice = zoneState.flashPrice ?? sku.price
+
+    addItem(product, quantity, {
+      lineKey,
+      price: finalPrice,
+      image: sku.img || product.image,
+      stock: sku.stock,
+      specLabel,
+      skuId: sku.id,
+    })
+
+    if (skuAction === 'buy') {
+      mallToast.success('正在跳转结算…')
+      setTimeout(() => navigate('/checkout'), 400)
+    } else {
+      mallToast.success(`「${product.title}」已加入购物车`)
     }
-    addItem(product, 1)
-    mallToast.success('已加入购物车，正在跳转结算…')
-    setTimeout(() => navigate('/checkout'), 400)
   }
 
   const handleCartNav = () => {
@@ -60,8 +86,8 @@ export default function ProductDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-cream-50">
-        <NavBar onBack={() => navigate(-1)}>商品详情</NavBar>
+      <div className="min-h-screen bg-gray-100">
+        <ImmersiveHeader onCartClick={handleCartNav} />
         <HomePageSkeleton />
       </div>
     )
@@ -69,57 +95,62 @@ export default function ProductDetail() {
 
   if (!product) return null
 
+  const soldOut = product.stock === 0
+  const displayProduct = {
+    ...product,
+    price: zoneState.flashPrice ?? product.price,
+    zoneTag: zoneState.zoneTag,
+    zoneRank: zoneState.rank,
+  }
+
   return (
-    <div className="min-h-screen bg-cream-50 pb-24">
-      <NavBar
-        onBack={() => navigate(-1)}
-        right={<ShopbagOutline fontSize={22} onClick={handleCartNav} />}
-        className="bg-cream-50/80 backdrop-blur-md"
-      >
-        商品详情
-      </NavBar>
+    <div className="min-h-screen bg-gray-100 pb-24">
+      <ImmersiveHeader onCartClick={handleCartNav} />
 
       <div className="max-w-lg mx-auto">
-        <Image src={product.image} fit="cover" className="w-full aspect-square" />
-        <div className="p-5">
-          <h1 className="text-xl font-semibold text-stone-800">{product.title}</h1>
-          <p className="text-sm text-stone-500 mt-2 leading-relaxed">{product.desc}</p>
-          <div className="mt-4 flex items-end gap-2">
-            <p className="text-2xl font-bold text-olive-700">
-              <span className="text-sm">¥</span>
-              {product.price}
-            </p>
-            <span className="text-xs text-stone-400 mb-1">
-              {product.stock > 0 ? `库存 ${product.stock}` : '已售罄'}
-            </span>
-          </div>
+        <div className="relative">
+          <ProductGallery images={product.images || [product.image]} />
         </div>
+        <PromotionBar promotion={product.promotion} />
+        <PriceBlock product={displayProduct} />
+
+        <SectionDivider />
+        <TitleBlock product={displayProduct} />
+        <SectionDivider />
+        <ReviewSection reviews={product.reviews} />
+        <SectionDivider />
+        <AskEveryone qaList={product.qa} />
+        <SectionDivider />
+
+        <section className="bg-white px-4 py-4 rounded-b-2xl">
+          <h3 className="text-sm font-bold text-[#333333] mb-2">商品详情</h3>
+          <p className="text-sm text-[#999999] leading-relaxed">{product.desc}</p>
+          <div className="mt-4 rounded-xl overflow-hidden">
+            <img
+              src={product.images?.[1] || product.image}
+              alt={product.title}
+              className="w-full rounded-xl"
+            />
+          </div>
+        </section>
       </div>
 
-      <footer className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-cream-200 px-4 py-3 safe-bottom">
-        <div className="max-w-lg mx-auto flex gap-3">
-          <Button
-            block
-            shape="rounded"
-            fill="outline"
-            onClick={handleAddToCart}
-            disabled={product.stock === 0}
-            style={{ '--border-color': '#4a6340', '--text-color': '#4a6340' }}
-          >
-            加入购物车
-          </Button>
-          <Button
-            block
-            color="primary"
-            shape="rounded"
-            onClick={handleBuyNow}
-            disabled={product.stock === 0}
-            style={{ '--background': '#4a6340' }}
-          >
-            立即购买
-          </Button>
-        </div>
-      </footer>
+      <DetailBottomBar
+        disabled={soldOut}
+        shopId={product.shopId || product.shop?.shopId}
+        product={product}
+        onAddCart={() => openSkuPicker('cart')}
+        onBuyNow={() => openSkuPicker('buy')}
+      />
+
+      <SkuPickerPopup
+        visible={skuVisible}
+        product={product}
+        action={skuAction}
+        onClose={() => setSkuVisible(false)}
+        onConfirm={handleSkuConfirm}
+      />
     </div>
   )
 }
+

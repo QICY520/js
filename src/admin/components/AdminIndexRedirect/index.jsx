@@ -3,7 +3,7 @@ import useAdminStore from '@/admin/store/useAdminStore'
 
 const DEFAULT_ROUTES = [
   { permission: 'product', path: '/admin/products' },
-  { permission: 'category', path: '/admin/categories' },
+  { permission: 'shop', path: '/admin/shops' },
   { permission: 'order', path: '/admin/orders' },
   { permission: 'user', path: '/admin/users' },
 ]

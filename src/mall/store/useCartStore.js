@@ -6,33 +6,46 @@ const useCartStore = create(
     (set, get) => ({
       items: [],
 
-      /** 添加商品到购物车 */
-      addItem: (product, quantity = 1) => {
+      /** 添加商品到购物车（支持 SKU 规格） */
+      addItem: (product, quantity = 1, options = {}) => {
+        const {
+          lineKey = String(product.id),
+          price = product.price,
+          image = product.image,
+          stock = product.stock,
+          specLabel = '',
+          skuId = null,
+        } = options
+
         set((state) => {
-          const existing = state.items.find((i) => i.productId === product.id)
+          const existing = state.items.find((i) => i.lineKey === lineKey)
           if (existing) {
             return {
               items: state.items.map((i) =>
-                i.productId === product.id
+                i.lineKey === lineKey
                   ? {
                       ...i,
-                      quantity: Math.min(i.quantity + quantity, product.stock ?? i.stock),
+                      quantity: Math.min(i.quantity + quantity, stock ?? i.stock),
                       selected: true,
                     }
                   : i,
               ),
             }
           }
+          const title = specLabel ? `${product.title}（${specLabel}）` : product.title
           return {
             items: [
               ...state.items,
               {
+                lineKey,
                 productId: product.id,
-                title: product.title,
-                price: product.price,
-                image: product.image,
-                stock: product.stock,
-                quantity: Math.min(quantity, product.stock ?? quantity),
+                skuId,
+                specLabel,
+                title,
+                price,
+                image,
+                stock,
+                quantity: Math.min(quantity, stock ?? quantity),
                 selected: true,
               },
             ],
@@ -40,49 +53,55 @@ const useCartStore = create(
         })
       },
 
-      /** 移除商品 */
-      removeItem: (productId) => {
+      /** 移除商品（按 lineKey 区分 SKU） */
+      removeItem: (lineKey) => {
         set((state) => ({
-          items: state.items.filter((i) => i.productId !== productId),
+          items: state.items.filter(
+            (i) => (i.lineKey || String(i.productId)) !== lineKey,
+          ),
         }))
       },
 
       /** 增加数量 */
-      increaseQuantity: (productId) => {
+      increaseQuantity: (lineKey) => {
         set((state) => ({
           items: state.items.map((i) => {
-            if (i.productId !== productId) return i
+            const key = i.lineKey || String(i.productId)
+            if (key !== lineKey) return i
             return { ...i, quantity: Math.min(i.quantity + 1, i.stock) }
           }),
         }))
       },
 
       /** 减少数量 */
-      decreaseQuantity: (productId) => {
+      decreaseQuantity: (lineKey) => {
         set((state) => ({
           items: state.items.map((i) => {
-            if (i.productId !== productId) return i
+            const key = i.lineKey || String(i.productId)
+            if (key !== lineKey) return i
             return { ...i, quantity: Math.max(1, i.quantity - 1) }
           }),
         }))
       },
 
       /** 直接设置数量 */
-      setQuantity: (productId, quantity) => {
+      setQuantity: (lineKey, quantity) => {
         set((state) => ({
           items: state.items.map((i) => {
-            if (i.productId !== productId) return i
+            const key = i.lineKey || String(i.productId)
+            if (key !== lineKey) return i
             return { ...i, quantity: Math.max(1, Math.min(quantity, i.stock)) }
           }),
         }))
       },
 
       /** 切换选中状态 */
-      toggleSelect: (productId) => {
+      toggleSelect: (lineKey) => {
         set((state) => ({
-          items: state.items.map((i) =>
-            i.productId === productId ? { ...i, selected: !i.selected } : i,
-          ),
+          items: state.items.map((i) => {
+            const key = i.lineKey || String(i.productId)
+            return key === lineKey ? { ...i, selected: !i.selected } : i
+          }),
         }))
       },
 
