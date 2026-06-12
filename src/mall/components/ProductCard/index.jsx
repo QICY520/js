@@ -19,7 +19,7 @@ export default function ProductCard({ product }) {
       tabIndex={0}
       onClick={() => navigate(`/product/${product.id}`)}
       onKeyDown={(e) => e.key === 'Enter' && navigate(`/product/${product.id}`)}
-      className="mb-3 break-inside-avoid rounded-2xl bg-white overflow-hidden shadow-md shadow-stone-900/8 hover:shadow-xl hover:shadow-olive-900/12 active:scale-[0.98] transition-all duration-300 cursor-pointer border border-cream-200/80"
+      className="mb-3 break-inside-avoid rounded-2xl bg-white overflow-hidden shadow-lg shadow-stone-900/8 hover:shadow-xl hover:shadow-olive-900/12 active:scale-[0.98] transition-all duration-300 cursor-pointer border border-cream-200/80"
     >
       <div className="relative overflow-hidden">
         <Image

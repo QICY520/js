@@ -131,7 +131,7 @@ export default function ShopChat() {
   }
 
   return (
-    <div className="min-h-screen bg-cream-100 flex flex-col pb-16 max-w-lg mx-auto">
+    <div className="min-h-screen flex flex-col pb-16 max-w-lg mx-auto">
       <header className="bg-cream-50/95 backdrop-blur-md px-4 py-3 pt-safe flex items-center gap-3 border-b border-cream-200 shrink-0">
         <button type="button" onClick={() => navigate(-1)} className="text-stone-600">
           <LeftOutline fontSize={22} />

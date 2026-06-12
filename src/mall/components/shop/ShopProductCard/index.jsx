@@ -8,7 +8,7 @@ export default function ShopProductCard({ product, compact = false }) {
     <button
       type="button"
       onClick={() => navigate(`/product/${product.id}`)}
-      className="text-left w-full bg-white rounded-xl overflow-hidden border border-cream-200/90 shadow-sm shadow-stone-900/5 active:scale-[0.98] transition-transform"
+      className="text-left w-full bg-white rounded-xl overflow-hidden border border-cream-200/90 shadow-md shadow-stone-900/5 active:scale-[0.98] transition-transform"
     >
       <div className={`relative ${compact ? 'aspect-square' : 'aspect-[4/5]'}`}>
         <img src={product.image} alt={product.title} className="w-full h-full object-cover" />

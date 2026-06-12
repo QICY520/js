@@ -29,7 +29,7 @@ export default function ShopProducts() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-cream-50 pb-16">
+      <div className="min-h-screen pb-16">
         <HomePageSkeleton />
       </div>
     )
@@ -38,7 +38,7 @@ export default function ShopProducts() {
   if (!shop) return null
 
   return (
-    <div className="min-h-screen bg-cream-50 pb-16 max-w-lg mx-auto">
+    <div className="min-h-screen pb-16 max-w-lg mx-auto">
       <ShopHeader shop={shop} />
       <section className="px-4 pt-4">
         <p className="text-xs text-stone-400 mb-3">共 {products.length} 件宝贝</p>

@@ -10,7 +10,7 @@ export default function GuessProductCard({ product }) {
       tabIndex={0}
       onClick={() => navigate(`/product/${product.id}`)}
       onKeyDown={(e) => e.key === 'Enter' && navigate(`/product/${product.id}`)}
-      className="mb-3 break-inside-avoid rounded-2xl bg-white overflow-hidden border border-cream-200 shadow-sm active:scale-[0.98] transition-transform"
+      className="mb-3 break-inside-avoid rounded-2xl bg-white overflow-hidden border border-cream-200 shadow-md active:scale-[0.98] transition-transform"
     >
       <div className="relative aspect-[4/5] overflow-hidden bg-cream-100">
         <img

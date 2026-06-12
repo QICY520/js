@@ -35,7 +35,7 @@ export default function ValueSalePage() {
                   state: { zoneTag: '特价', flashPrice: item.salePrice },
                 })
               }
-              className="rounded-2xl bg-white overflow-hidden shadow-sm active:scale-[0.98] transition-transform text-left"
+              className="rounded-2xl bg-white overflow-hidden shadow-md active:scale-[0.98] transition-transform text-left"
             >
               <div className="relative aspect-square">
                 <Image src={item.image} fit="cover" className="w-full h-full" lazy />

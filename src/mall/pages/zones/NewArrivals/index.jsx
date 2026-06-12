@@ -39,7 +39,7 @@ export default function NewArrivalsPage() {
                   onClick={() =>
                     navigate(`/product/${item.id}`, { state: { zoneTag: '新品首发' } })
                   }
-                  className="w-full flex gap-3 p-3 rounded-2xl bg-white shadow-sm text-left active:scale-[0.99]"
+                  className="w-full flex gap-3 p-3 rounded-2xl bg-white shadow-md text-left active:scale-[0.99]"
                 >
                   <Image src={item.image} width={80} height={80} fit="cover" className="rounded-xl" />
                   <div className="flex-1">
@@ -59,7 +59,7 @@ export default function NewArrivalsPage() {
               {data.upcoming?.map((item) => (
                 <div key={item.id} className="relative">
                   <span className="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-olive-400 border-2 border-white" />
-                  <div className="rounded-2xl bg-white overflow-hidden shadow-sm">
+                  <div className="rounded-2xl bg-white overflow-hidden shadow-md">
                     <Image src={item.image} fit="cover" className="w-full h-32" />
                     <div className="p-3">
                       <p className="text-sm font-medium text-stone-800">{item.title}</p>

@@ -48,7 +48,7 @@ export default function FlashSalePage() {
                   state: { zoneTag: '限时秒杀', flashPrice: item.flashPrice },
                 })
               }
-              className="w-full flex gap-3 p-3 rounded-2xl bg-white border border-cream-200 shadow-sm active:scale-[0.99] transition-transform text-left"
+              className="w-full flex gap-3 p-3 rounded-2xl bg-white border border-cream-200 shadow-md active:scale-[0.99] transition-transform text-left"
             >
               <Image src={item.image} width={96} height={96} fit="cover" className="rounded-xl shrink-0" />
               <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">

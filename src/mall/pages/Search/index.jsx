@@ -23,7 +23,7 @@ function SuggestPanel({ keyword, suggestions, onSelect }) {
         <span className="px-1.5 py-0.5 rounded bg-olive-100 text-[10px]">AI</span>
         智能联想
       </p>
-      <div className="rounded-2xl bg-white border border-cream-200 overflow-hidden shadow-sm">
+      <div className="rounded-2xl bg-white border border-cream-200 overflow-hidden shadow-md">
         {suggestions.length === 0 ? (
           <p className="px-4 py-3 text-sm text-stone-400">输入更多字符获取联想…</p>
         ) : (
@@ -128,7 +128,7 @@ export default function SearchPage() {
         onSearch={doSearch}
       />
 
-      <main className="max-w-lg mx-auto px-4 pt-4 bg-cream-50 min-h-[calc(100vh-8rem)]">
+      <main className="max-w-lg mx-auto px-4 pt-4 min-h-[calc(100vh-8rem)]">
         {showSuggest && (
           <SuggestPanel
             keyword={searchKey}

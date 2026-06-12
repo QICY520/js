@@ -22,7 +22,7 @@ function App() {
   if (isAdmin) {
     return (
       <ConfigProvider locale={zhCN} theme={adminTheme}>
-        <div className="min-h-screen bg-cream-100">
+        <div className="relative min-h-screen" style={{ backgroundColor: 'rgba(240, 236, 227, 0.55)' }}>
           <Outlet />
         </div>
       </ConfigProvider>
@@ -31,7 +31,7 @@ function App() {
 
   return (
     <MobileConfigProvider locale={zhCNMobile}>
-      <div className="min-h-screen bg-cream-50">
+        <div className="relative min-h-screen" style={{ backgroundColor: 'rgba(248, 246, 240, 0.55)' }}>
         <Outlet />
         <MallToastHost />
       </div>

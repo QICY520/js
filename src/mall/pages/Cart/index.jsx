@@ -113,7 +113,7 @@ export default function CartPage() {
   }
 
   return (
-    <MallPageShell className="bg-cream-50 flex flex-col">
+    <MallPageShell>
       <NavBar onBack={() => navigate(-1)} className="bg-cream-50/80 backdrop-blur-md">
         购物车
       </NavBar>
@@ -138,7 +138,7 @@ export default function CartPage() {
               return (
                 <section
                   key={group.categoryId}
-                  className="rounded-2xl bg-white border border-cream-200 shadow-sm"
+                  className="rounded-2xl bg-white border border-cream-200 shadow-md"
                 >
                   {/* 分组头：品类名 + 全选 */}
                   <div className="flex items-center gap-2 px-3 py-2.5 bg-cream-50/80 border-b border-cream-100">

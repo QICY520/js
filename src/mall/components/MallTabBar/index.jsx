@@ -38,7 +38,8 @@ export default function MallTabBar() {
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-xl border-t border-cream-200 safe-bottom">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-2xl border-t border-cream-200/60 safe-bottom"
+      style={{ boxShadow: '0 -0.5px 0 rgba(0,0,0,0.05)' }}>
       <div className="max-w-lg mx-auto flex">
         {TABS.map((tab) => {
           const { key, label, icon: Icon, match } = tab
@@ -50,19 +51,23 @@ export default function MallTabBar() {
               key={key}
               type="button"
               onClick={() => handleTabClick(tab)}
-              className={`flex-1 flex flex-col items-center py-2 gap-0.5 transition-colors relative ${
+              className={`flex-1 flex flex-col items-center pt-1.5 pb-1 gap-0 transition-all duration-200 relative group ${
                 active ? 'text-olive-700' : 'text-stone-400'
               }`}
             >
-              <span className="relative">
-                <Icon fontSize={20} />
+              <span className="relative transition-transform duration-200 group-hover:scale-110 group-active:scale-95">
+                <Icon fontSize={22} />
                 {badgeCount > 0 && (
-                  <span className="absolute -top-1 -right-2 min-w-[14px] h-3.5 px-0.5 rounded-full bg-red-500 text-white text-[9px] flex items-center justify-center">
+                  <span className="absolute -top-1 -right-2 min-w-[15px] h-3.5 px-0.5 rounded-full bg-red-500 text-white text-[9px] flex items-center justify-center font-semibold">
                     {badgeCount > 99 ? '99+' : badgeCount}
                   </span>
                 )}
               </span>
-              <span className="text-[10px] font-medium">{label}</span>
+              <span className={`text-[10px] font-medium tracking-wide transition-transform duration-200 group-hover:scale-110 ${
+                active ? 'font-semibold' : ''
+              }`}>
+                {label}
+              </span>
             </button>
           )
         })}

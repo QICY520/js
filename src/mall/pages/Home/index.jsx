@@ -11,7 +11,7 @@ import { HomePageSkeleton } from '@/mall/components/PageSkeleton'
 import useScrollY from '@/mall/hooks/useScrollY'
 import { getProducts } from '@/utils/api'
 
-const HEADER_OFFSET = 'pt-[120px]'
+const HEADER_OFFSET = 'pt-[110px]'
 
 export default function MallHome() {
   const navigate = useNavigate()
@@ -41,7 +41,7 @@ export default function MallHome() {
   }, [])
 
   return (
-    <MallPageShell className="bg-cream-50">
+    <MallPageShell>
       <SearchBar
         scrollProgress={progress}
         themeRgb={theme.themeRgb}
@@ -53,10 +53,10 @@ export default function MallHome() {
         <NavGrid />
         <FlashSale />
 
-        <section className="px-4 mt-8 pb-4">
-          <div className="flex items-baseline justify-between mb-4">
-            <h3 className="text-sm font-semibold text-stone-800">热门推荐</h3>
-            <span className="text-xs text-stone-400">
+        <section className="px-4 mt-6 pb-4">
+          <div className="flex items-baseline justify-between mb-3">
+            <h3 className="text-[17px] font-semibold text-stone-800">热门推荐</h3>
+            <span className="text-[12px] text-stone-400">
               {loading ? '加载中…' : `${products.length} 件商品`}
             </span>
           </div>

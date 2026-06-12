@@ -233,7 +233,7 @@ export default function CreateOrderPage() {
       <div className="max-w-lg mx-auto px-4 space-y-4 pt-3">
         {/* 地址选择区 */}
         <section
-          className="rounded-2xl bg-white p-4 shadow-sm flex items-center gap-3 active:bg-cream-50 transition-colors"
+          className="rounded-2xl bg-white p-4 shadow-md flex items-center gap-3 active:bg-cream-50 transition-colors"
           role="button"
           onClick={() => setAddressListVisible(true)}
         >
@@ -258,7 +258,7 @@ export default function CreateOrderPage() {
         </section>
 
         {/* 商品清单 */}
-        <section className="rounded-2xl bg-white p-4 shadow-sm">
+        <section className="rounded-2xl bg-white p-4 shadow-md">
           <h3 className="text-sm font-semibold text-stone-800 mb-3">商品清单</h3>
           <div className="space-y-3">
             {displayItems.map((item) => (
@@ -277,7 +277,7 @@ export default function CreateOrderPage() {
         </section>
 
         {/* 支付方式 */}
-        <section className="rounded-2xl bg-white p-4 shadow-sm">
+        <section className="rounded-2xl bg-white p-4 shadow-md">
           <h3 className="text-sm font-semibold text-stone-800 mb-3">支付方式</h3>
           <Radio.Group value={paymentMethod} onChange={setPaymentMethod}>
             <div className="space-y-2">

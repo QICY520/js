@@ -61,7 +61,7 @@ export default function OrdersPage() {
   }
 
   return (
-    <MallPageShell className="bg-gray-50">
+    <MallPageShell>
       <NavBar className="bg-white/90 backdrop-blur-md">我的订单</NavBar>
 
       <div className="max-w-lg mx-auto">
@@ -90,7 +90,7 @@ export default function OrdersPage() {
                   tabIndex={0}
                   onClick={() => navigate(`/orders/${order.id}`)}
                   onKeyDown={(e) => e.key === 'Enter' && navigate(`/orders/${order.id}`)}
-                  className="rounded-2xl bg-white border border-cream-200 shadow-sm overflow-hidden active:scale-[0.99] transition-transform"
+                  className="rounded-2xl bg-white border border-cream-200 shadow-md overflow-hidden active:scale-[0.99] transition-transform"
                 >
                   <div className="flex items-center justify-between px-4 py-3 border-b border-cream-100">
                     <span className="text-xs text-stone-500">订单号 {order.orderNo}</span>

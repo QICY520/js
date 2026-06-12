@@ -38,7 +38,7 @@ export default function MorePage() {
               key={cat.id}
               type="button"
               onClick={() => navigate(cat.link)}
-              className="flex flex-col items-center gap-2 p-3 rounded-2xl bg-white shadow-sm active:scale-95 transition-transform"
+              className="flex flex-col items-center gap-2 p-3 rounded-2xl bg-white shadow-md active:scale-95 transition-transform"
             >
               <span className="w-10 h-10 rounded-xl bg-olive-100 text-olive-700 flex items-center justify-center text-sm font-bold">
                 {cat.icon}
@@ -61,7 +61,7 @@ export default function MorePage() {
                 key={tool.id}
                 type="button"
                 onClick={() => navigate(tool.link)}
-                className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-white shadow-sm active:scale-95 transition-transform"
+                className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-white shadow-md active:scale-95 transition-transform"
               >
                 <Icon fontSize={24} className="text-olive-600" />
                 <span className="text-xs text-stone-600">{tool.name}</span>

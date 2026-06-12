@@ -24,19 +24,21 @@ export default function SearchBar({ scrollProgress = 0, themeRgb = '74, 99, 64',
   const p = Math.min(Math.max(scrollProgress, 0), 1)
   const isSolid = p > 0.5
 
+  const fixedThemeRgb = '74, 99, 64'
+
   const headerStyle = {
     backgroundColor: isSolid
       ? `rgba(253, 252, 249, ${0.88 + p * 0.1})`
-      : `rgba(${themeRgb}, ${0.15 + p * 0.25})`,
+      : `rgba(${fixedThemeRgb}, ${0.15 + p * 0.25})`,
     backdropFilter: `blur(${8 + p * 12}px)`,
     WebkitBackdropFilter: `blur(${8 + p * 12}px)`,
     boxShadow: p > 0.3 ? '0 4px 24px rgba(43, 55, 40, 0.08)' : 'none',
     borderBottom: p > 0.3 ? '1px solid rgba(255,255,255,0.6)' : '1px solid transparent',
   }
 
-  const textClass = isSolid ? 'text-olive-800' : 'text-cream-50'
-  const subTextClass = isSolid ? 'text-stone-500' : 'text-cream-50/80'
-  const iconClass = isSolid ? 'text-stone-500 hover:text-olive-600' : 'text-cream-50/90 hover:text-white'
+  const textClass = isSolid ? 'text-olive-800' : 'text-olive-700'
+  const subTextClass = isSolid ? 'text-stone-500' : 'text-olive-600'
+  const iconClass = isSolid ? 'text-stone-500 hover:text-olive-600' : 'text-olive-600 hover:text-olive-800'
 
   const handleCartClick = () => {
     navigate('/cart')
@@ -57,15 +59,15 @@ export default function SearchBar({ scrollProgress = 0, themeRgb = '74, 99, 64',
       className="fixed top-0 left-0 right-0 z-50 transition-[background,box-shadow] duration-300"
       style={headerStyle}
     >
-      <div className="max-w-lg mx-auto px-4 pt-safe pt-3 pb-3">
-        <div className="flex items-center gap-3 mb-3">
-          <h1 className={`text-base font-semibold tracking-tight shrink-0 transition-colors ${textClass}`}>
+      <div className="max-w-lg mx-auto px-4 pt-safe pt-2 pb-2">
+        <div className="flex items-center gap-2 mb-2">
+          <h1 className={`text-[17px] font-semibold tracking-tight shrink-0 transition-colors ${textClass}`}>
             LUMIÈRE
           </h1>
           <button
             type="button"
             onClick={handleUserClick}
-            className={`flex items-center gap-1 text-[10px] transition-colors ${subTextClass}`}
+            className={`flex items-center gap-1 text-xs transition-colors ${subTextClass}`}
           >
             <UserCircleOutline fontSize={14} />
             {isLoggedIn ? user?.nickname : adminLoggedIn ? adminUser?.nickname : '登录'}
@@ -75,7 +77,7 @@ export default function SearchBar({ scrollProgress = 0, themeRgb = '74, 99, 64',
               type="button"
               onClick={() => navigate('/admin/products')}
               className={`flex items-center gap-0.5 text-[10px] px-2 py-1 rounded-full transition-colors ${
-                isSolid ? 'bg-olive-100 text-olive-700' : 'bg-white/20 text-cream-50'
+                isSolid ? 'bg-olive-100 text-olive-700' : 'bg-olive-100/60 text-olive-700'
               }`}
             >
               <LinkOutline fontSize={12} />
@@ -100,19 +102,19 @@ export default function SearchBar({ scrollProgress = 0, themeRgb = '74, 99, 64',
         <button
           type="button"
           onClick={onSearchClick}
-          className={`w-full flex items-center gap-2 h-10 px-4 rounded-2xl transition-all ${
+          className={`w-full flex items-center gap-2 h-9 px-3.5 rounded-xl transition-all ${
             isSolid
-              ? 'bg-white/70 border border-cream-200 shadow-sm'
-              : 'bg-white/20 border border-white/30 backdrop-blur-md'
+              ? 'bg-white/80 border border-cream-200/80 shadow-sm'
+              : 'bg-white/25 border border-white/30 backdrop-blur-md'
           }`}
         >
-          <SearchOutline fontSize={16} className={isSolid ? 'text-stone-400' : 'text-cream-50/80'} />
-          <span className={`text-sm flex-1 text-left ${isSolid ? 'text-stone-400' : 'text-cream-50/70'}`}>
+          <SearchOutline fontSize={15} className={isSolid ? 'text-stone-400' : 'text-olive-400'} />
+          <span className={`text-[13px] flex-1 text-left ${isSolid ? 'text-stone-400' : 'text-olive-500'}`}>
             搜索心仪好物
           </span>
           <span
-            className={`text-[10px] px-2 py-0.5 rounded-full ${
-              isSolid ? 'bg-olive-100 text-olive-600' : 'bg-white/20 text-cream-50'
+            className={`text-[9px] px-1.5 py-0.5 rounded-md font-medium ${
+              isSolid ? 'bg-olive-100 text-olive-600' : 'bg-olive-100/60 text-olive-600'
             }`}
           >
             AI

@@ -55,7 +55,7 @@ export default function CategoryPage() {
   const activeCategory = categories.find((c) => String(c.id) === activeKey)
 
   return (
-    <MallPageShell className="bg-cream-50">
+    <MallPageShell>
       <header className="sticky top-0 z-40 bg-cream-50/95 backdrop-blur-xl border-b border-cream-200 pt-safe">
         <div className="max-w-lg mx-auto px-4 py-3">
           <h1 className="text-base font-semibold text-olive-800">商品分类</h1>

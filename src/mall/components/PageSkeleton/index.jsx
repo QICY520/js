@@ -9,7 +9,7 @@ function Bone({ className = '' }) {
 
 export function AuthPageSkeleton() {
   return (
-    <div className="min-h-screen bg-cream-50 flex flex-col justify-center px-8 max-w-lg mx-auto w-full">
+    <div className="min-h-screen flex flex-col justify-center px-8 max-w-lg mx-auto w-full">
       <div className="text-center mb-10 space-y-3">
         <Bone className="h-8 w-32 mx-auto rounded-full" />
         <Bone className="h-4 w-48 mx-auto" />

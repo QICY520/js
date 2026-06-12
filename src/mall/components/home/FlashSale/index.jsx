@@ -23,8 +23,8 @@ export default function FlashSale() {
   if (!products.length) return null
 
   return (
-    <section id="flash-sale" className="px-4 mt-6">
-      <div className="rounded-2xl bg-gradient-to-br from-red-50 to-cream-50 border border-red-100/80 overflow-hidden shadow-sm">
+    <section id="flash-sale" className="px-4 mt-5">
+      <div className="rounded-2xl bg-gradient-to-br from-red-50 to-cream-50 border border-red-100/80 overflow-hidden shadow-md">
         <div className="flex items-center justify-between px-4 pt-3 pb-2">
           <div className="flex items-center gap-2">
             <span className="text-base font-bold text-red-600 tracking-tight">限时秒杀</span>
@@ -65,7 +65,7 @@ export default function FlashSale() {
               onClick={() => navigate(`/product/${item.id}`)}
               className="shrink-0 w-24 text-left active:scale-95 transition-transform"
             >
-              <div className="relative rounded-xl overflow-hidden bg-white shadow-sm">
+              <div className="relative rounded-xl overflow-hidden bg-white shadow-md">
                 <Image src={item.image} fit="cover" className="w-24 h-24" lazy />
               </div>
               <p className="mt-1.5 text-sm font-bold text-red-600">

@@ -114,7 +114,7 @@ export default function AddressesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-cream-50 pb-20">
+    <div className="min-h-screen pb-20">
       <NavBar onBack={() => navigate(-1)} className="bg-white/90 backdrop-blur-md">
         收货地址
       </NavBar>
@@ -141,7 +141,7 @@ export default function AddressesPage() {
                 ]}
               >
                 <div
-                  className={`relative rounded-2xl bg-white border p-4 shadow-sm active:bg-cream-50 transition-colors ${
+                  className={`relative rounded-2xl bg-white border p-4 shadow-md active:bg-cream-50 transition-colors ${
                     addr.isDefault ? 'border-olive-300' : 'border-cream-200'
                   }`}
                   onClick={() => openEdit(addr)}

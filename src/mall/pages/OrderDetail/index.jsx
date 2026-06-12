@@ -70,7 +70,7 @@ export default function OrderDetailPage() {
       </NavBar>
 
       <div className="max-w-lg mx-auto px-4 pt-4 space-y-4">
-        <section className="rounded-2xl bg-white p-4 shadow-sm">
+        <section className="rounded-2xl bg-white p-4 shadow-md">
           <div className="flex items-center justify-between mb-4">
             <span className={`text-sm font-semibold px-3 py-1 rounded-full ${statusInfo.bg} ${statusInfo.color}`}>
               {statusInfo.label}
@@ -84,7 +84,7 @@ export default function OrderDetailPage() {
           </Steps>
         </section>
 
-        <section className="rounded-2xl bg-white p-4 shadow-sm space-y-3">
+        <section className="rounded-2xl bg-white p-4 shadow-md space-y-3">
           <h3 className="text-sm font-semibold text-stone-800">商品清单</h3>
           {order.items?.map((item) => (
             <div key={item.productId} className="flex gap-3">
@@ -100,7 +100,7 @@ export default function OrderDetailPage() {
           ))}
         </section>
 
-        <section className="rounded-2xl bg-white p-4 shadow-sm space-y-2 text-sm">
+        <section className="rounded-2xl bg-white p-4 shadow-md space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-stone-500">下单时间</span>
             <span>{order.createTime}</span>

@@ -19,7 +19,7 @@ export default function MessagesPage() {
   }, [clearUnread])
 
   return (
-    <MallPageShell className="bg-gray-100">
+    <MallPageShell>
       <NavBar className="bg-white">消息</NavBar>
       <div className="max-w-lg mx-auto mt-2">
         <List className="rounded-2xl overflow-hidden mx-3">

@@ -41,7 +41,7 @@ export default function CategoryGrid({ onCategoryClick }) {
             className="flex flex-col items-center gap-2 group"
           >
             <div
-              className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${color} flex items-center justify-center shadow-md shadow-stone-900/10 group-active:scale-95 transition-transform`}
+              className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${color} flex items-center justify-center shadow-lg shadow-stone-900/10 group-active:scale-95 transition-transform`}
             >
               <Icon fontSize={20} color="#fdfcf9" />
             </div>

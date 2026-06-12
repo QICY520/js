@@ -32,7 +32,15 @@ export default function HomeSwiper({ onThemeChange }) {
   }
 
   return (
-    <section className="relative">
+    <section className="relative px-4">
+      <div
+        className="rounded-2xl overflow-hidden backdrop-blur-xl"
+        style={{
+          backgroundColor: 'rgba(248, 246, 240, 0.4)',
+          border: '1px solid rgba(255,255,255,0.3)',
+          boxShadow: '0 8px 32px rgba(43, 55, 40, 0.08), inset 0 1px 0 rgba(255,255,255,0.5)',
+        }}
+      >
       <Swiper
         autoplay
         loop
@@ -61,7 +69,7 @@ export default function HomeSwiper({ onThemeChange }) {
               <div
                 className="absolute inset-0"
                 style={{
-                  background: `linear-gradient(to top, rgba(${item.themeRgb || '74,99,64'}, 0.75) 0%, rgba(${item.themeRgb || '74,99,64'}, 0.2) 45%, transparent 70%)`,
+                  background: `linear-gradient(to top, rgba(0,0,0,0.25) 0%, transparent 50%)`,
                 }}
               />
               <div className="absolute inset-x-0 bottom-0 p-5 pb-8 text-cream-50">
@@ -73,6 +81,7 @@ export default function HomeSwiper({ onThemeChange }) {
           </Swiper.Item>
         ))}
       </Swiper>
+      </div>
     </section>
   )
 }

@@ -250,7 +250,7 @@ export default function MyPage() {
   }
 
   return (
-    <MallPageShell className="bg-gray-100">
+    <MallPageShell>
       {/* 用户信息 */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-olive-700/90 via-olive-600/60 to-gray-100" />
@@ -278,7 +278,7 @@ export default function MyPage() {
 
       {/* 顶部四宫格 */}
       <section className="mx-4 -mt-2 relative z-10">
-        <div className="rounded-2xl bg-white shadow-sm border border-cream-200 px-2 py-4">
+        <div className="rounded-2xl bg-white shadow-md border border-cream-200 px-2 py-4">
           <div className="flex justify-around">
             {TOP_SHORTCUTS.map(({ key, label, icon: Icon, color }) => (
               <button

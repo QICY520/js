@@ -65,7 +65,7 @@ export default function NavGrid({ onItemClick }) {
               className="group flex flex-col items-center gap-2 active:scale-95 transition-transform duration-300"
             >
               <div
-                className={`nav-icon-shine w-12 h-12 rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-md shadow-stone-900/10 transition-all duration-300 group-hover:-translate-y-1 group-hover:scale-110 group-hover:shadow-lg`}
+                className={`nav-icon-shine w-12 h-12 rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg shadow-stone-900/10 transition-all duration-300 group-hover:-translate-y-1 group-hover:scale-110 group-hover:shadow-xl`}
               >
                 <Icon fontSize={22} color="#fdfcf9" />
               </div>

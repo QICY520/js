@@ -44,6 +44,28 @@
   --color-stone-900: #1c1917;
 
   --font-sans: "Inter", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+
+  /* iOS 标准间距 */
+  --spacing-gutter: 16px;
+  --spacing-card: 12px;
+  --spacing-section: 20px;
+
+  /* iOS 字体层级 */
+  --fs-large-title: 22px;
+  --fs-title-1: 17px;
+  --fs-title-2: 15px;
+  --fs-title-3: 14px;
+  --fs-body: 15px;
+  --fs-callout: 14px;
+  --fs-subhead: 13px;
+  --fs-footnote: 12px;
+  --fs-caption: 11px;
+
+  /* 卡片阴影 — 加深立体感 */
+  --shadow-sm: 0 2px 8px rgba(43, 55, 40, 0.08), 0 1px 2px rgba(43, 55, 40, 0.06);
+  --shadow-md: 0 4px 16px rgba(43, 55, 40, 0.10), 0 2px 4px rgba(43, 55, 40, 0.08);
+  --shadow-lg: 0 8px 28px rgba(43, 55, 40, 0.14), 0 4px 8px rgba(43, 55, 40, 0.10);
+  --shadow-xl: 0 12px 40px rgba(43, 55, 40, 0.16), 0 6px 12px rgba(43, 55, 40, 0.10);
 }
 
 @layer base {
@@ -61,13 +83,29 @@
   body {
     margin: 0;
     font-family: var(--font-sans);
-    background-color: var(--color-cream-50);
+    background-color: var(--color-cream-100);
     color: var(--color-stone-800);
     min-height: 100vh;
+    background-image:
+      radial-gradient(rgba(200, 212, 180, 0.55) 1.5px, transparent 1.5px),
+      radial-gradient(rgba(200, 212, 180, 0.4) 1.5px, transparent 1.5px);
+    background-size: 18px 18px, 18px 18px;
+    background-position: 0 0, 9px 9px;
   }
 
   #root {
     min-height: 100vh;
+  }
+
+  /* iOS 弹性滚动 */
+  html {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* 禁用双击缩放（移动端） */
+  button,
+  a {
+    touch-action: manipulation;
   }
 }
 

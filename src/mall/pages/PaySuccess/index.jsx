@@ -57,7 +57,7 @@ export default function PaySuccessPage() {
         />
 
         {order && (
-          <div className="rounded-2xl bg-white border border-cream-200 p-5 shadow-sm space-y-3 mt-4">
+          <div className="rounded-2xl bg-white border border-cream-200 p-5 shadow-md space-y-3 mt-4">
             <div className="flex justify-between text-sm">
               <span className="text-stone-500">订单编号</span>
               <span className="text-stone-800 font-medium">{order.orderNo}</span>
