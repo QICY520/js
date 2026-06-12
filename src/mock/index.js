@@ -1154,6 +1154,7 @@ if (import.meta.env.DEV) {
     order.status = 1
     order.paymentMethod = paymentMethod
     order.payTime = new Date().toLocaleString('zh-CN')
+    order.reviewed = false
 
     // 支付成功后扣减商品库存（前后台数据联动）
     order.items.forEach((item) => {
@@ -1165,6 +1166,45 @@ if (import.meta.env.DEV) {
     saveStore(STORAGE_KEYS.products, products)
     saveStore(STORAGE_KEYS.orders, orders)
     return success(order, '支付成功')
+  })
+
+  /** 用户确认收货 → 待评价 */
+  Mock.mock(/\/api\/orders\/\d+\/receive/, 'post', (options) => {
+    const user = getUserByToken(parseToken(options))
+    if (!user) return fail('请先登录', 401)
+    const id = Number(options.url.match(/\/api\/orders\/(\d+)\/receive/)?.[1])
+    const order = orders.find((o) => o.id === id)
+    if (!order) return fail('订单不存在', 404)
+    if (user.role === 'user' && order.userId !== user.id) return fail('无权操作', 403)
+    if (order.status !== 1 && order.status !== 2) return fail('当前订单不可确认收货')
+
+    order.status = 3
+    saveStore(STORAGE_KEYS.orders, orders)
+    return success(order, '已确认收货')
+  })
+
+  /** 用户提交评价 → 已完成 */
+  Mock.mock(/\/api\/orders\/\d+\/review/, 'post', (options) => {
+    const user = getUserByToken(parseToken(options))
+    if (!user) return fail('请先登录', 401)
+    const id = Number(options.url.match(/\/api\/orders\/(\d+)\/review/)?.[1])
+    const order = orders.find((o) => o.id === id)
+    if (!order) return fail('订单不存在', 404)
+    if (user.role === 'user' && order.userId !== user.id) return fail('无权操作', 403)
+    if (order.status !== 3) return fail('当前订单不可评价')
+
+    const { rating = 5, content = '' } = parseBody(options)
+    if (!content.trim()) return fail('请填写评价内容')
+
+    order.status = 5
+    order.reviewed = true
+    order.review = {
+      rating,
+      content: content.trim(),
+      createTime: new Date().toLocaleString('zh-CN'),
+    }
+    saveStore(STORAGE_KEYS.orders, orders)
+    return success(order, '评价成功')
   })
 
   Mock.mock(/\/api\/orders\/\d+\/status/, 'put', (options) => {

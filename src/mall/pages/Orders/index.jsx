@@ -2,11 +2,14 @@ import { useEffect, useState, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { NavBar, CapsuleTabs, Image, Button, Empty } from 'antd-mobile'
 import useOrderStore from '@/mall/store/useOrderStore'
-import { getOrders } from '@/utils/api'
+import { getOrders, confirmOrderReceive } from '@/utils/api'
 import MallPageShell from '@/mall/components/MallPageShell'
+import OrderReviewPopup from '@/mall/components/order/OrderReviewPopup'
 import {
+  ORDER_STATUS,
   ORDER_STATUS_TABS,
   ORDER_STATUS_MAP,
+  normalizeOrder,
 } from '@/mall/constants/order'
 import { ListPageSkeleton } from '@/mall/components/PageSkeleton'
 import mallToast from '@/mall/utils/toast'
@@ -16,12 +19,14 @@ export default function OrdersPage() {
   const [searchParams] = useSearchParams()
   const orders = useOrderStore((s) => s.orders)
   const syncOrders = useOrderStore((s) => s.syncOrders)
+  const updateOrder = useOrderStore((s) => s.updateOrder)
 
-  /** 支持 ?status=0|1|2 从「我的」页面跳转预选 Tab */
   const initialTab = searchParams.get('status')
   const isValidTab = ORDER_STATUS_TABS.some((t) => t.key === initialTab)
   const [activeTab, setActiveTab] = useState(isValidTab ? initialTab : 'all')
   const [loading, setLoading] = useState(true)
+  const [reviewOrder, setReviewOrder] = useState(null)
+  const [receivingId, setReceivingId] = useState(null)
 
   useEffect(() => {
     getOrders()
@@ -35,6 +40,25 @@ export default function OrdersPage() {
     if (!tab || tab.status === null) return orders
     return orders.filter((o) => o.status === tab.status)
   }, [orders, activeTab])
+
+  const handleConfirmReceive = async (order, e) => {
+    e?.stopPropagation()
+    setReceivingId(order.id)
+    try {
+      const res = await confirmOrderReceive(order.id)
+      updateOrder(normalizeOrder(res.data))
+      mallToast.success('已确认收货，快来评价吧')
+    } catch (err) {
+      mallToast.fail(err.message || '操作失败')
+    } finally {
+      setReceivingId(null)
+    }
+  }
+
+  const openReview = (order, e) => {
+    e?.stopPropagation()
+    setReviewOrder(order)
+  }
 
   return (
     <MallPageShell className="bg-gray-50">
@@ -94,7 +118,7 @@ export default function OrdersPage() {
                       <span className="text-olive-700 font-bold ml-1">¥{order.totalAmount}</span>
                     </span>
                     <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                      {order.status === 0 && (
+                      {order.status === ORDER_STATUS.PENDING_PAY && (
                         <Button
                           size="mini"
                           color="primary"
@@ -102,6 +126,29 @@ export default function OrdersPage() {
                           onClick={() => navigate(`/orders/${order.id}`)}
                         >
                           去支付
+                        </Button>
+                      )}
+                      {(order.status === ORDER_STATUS.PENDING_SHIP
+                        || order.status === ORDER_STATUS.PENDING_RECEIVE) && (
+                        <Button
+                          size="mini"
+                          color="primary"
+                          shape="rounded"
+                          loading={receivingId === order.id}
+                          onClick={(e) => handleConfirmReceive(order, e)}
+                        >
+                          确认收货
+                        </Button>
+                      )}
+                      {order.status === ORDER_STATUS.PENDING_REVIEW && (
+                        <Button
+                          size="mini"
+                          color="primary"
+                          shape="rounded"
+                          onClick={(e) => openReview(order, e)}
+                          style={{ '--background': '#ea580c' }}
+                        >
+                          去评价
                         </Button>
                       )}
                       <Button
@@ -120,6 +167,12 @@ export default function OrdersPage() {
           </div>
         )}
       </div>
+
+      <OrderReviewPopup
+        order={reviewOrder}
+        visible={!!reviewOrder}
+        onClose={() => setReviewOrder(null)}
+      />
     </MallPageShell>
   )
 }

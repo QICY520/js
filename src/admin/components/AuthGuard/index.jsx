@@ -1,10 +1,11 @@
 import { Navigate, useLocation } from 'react-router-dom'
 import useAppAuthHydration from '@/hooks/useAppAuthHydration'
+import useAdminStore from '@/admin/store/useAdminStore'
 import { AuthPageSkeleton } from '@/mall/components/PageSkeleton'
 
 export default function AuthGuard({ children }) {
   const location = useLocation()
-  const loggedIn = useAdminStore((s) => !!s.token && !!s.user)
+  const { hydrated, adminLoggedIn } = useAppAuthHydration()
 
   if (!hydrated) return <AuthPageSkeleton />
 

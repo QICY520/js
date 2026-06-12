@@ -2,11 +2,13 @@ import { useState } from 'react'
 import { LeftOutline, StarFill } from 'antd-mobile-icons'
 import { useNavigate } from 'react-router-dom'
 import { followShop } from '@/utils/api'
+import useUserStore from '@/mall/store/useUserStore'
 import mallToast from '@/mall/utils/toast'
 
 export default function ShopHeader({ shop, onFollowChange }) {
   const navigate = useNavigate()
-  const [followed, setFollowed] = useState(!!shop?.followed)
+  const isFollowed = useUserStore((s) => s.isFollowedShop(shop?.shopId))
+  const toggleFollowShop = useUserStore((s) => s.toggleFollowShop)
   const [loading, setLoading] = useState(false)
 
   if (!shop) return null
@@ -14,9 +16,9 @@ export default function ShopHeader({ shop, onFollowChange }) {
   const handleFollow = async () => {
     setLoading(true)
     try {
-      const next = !followed
+      const next = !isFollowed
       await followShop(shop.shopId, next)
-      setFollowed(next)
+      toggleFollowShop(shop.shopId)
       onFollowChange?.(next)
       mallToast.success(next ? '关注成功' : '已取消关注')
     } catch (err) {
@@ -60,12 +62,12 @@ export default function ShopHeader({ shop, onFollowChange }) {
             disabled={loading}
             onClick={handleFollow}
             className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-              followed
+              isFollowed
                 ? 'bg-cream-200 text-stone-500'
                 : 'bg-olive-600 text-cream-50 active:bg-olive-700'
             }`}
           >
-            {followed ? '已关注' : '+ 关注'}
+            {isFollowed ? '已关注' : '+ 关注'}
           </button>
         </div>
       </div>

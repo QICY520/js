@@ -8,7 +8,9 @@ import {
   SwipeAction,
   Button,
   Empty,
+  Dialog,
 } from 'antd-mobile'
+import { DeleteOutline } from 'antd-mobile-icons'
 import useCartStore from '@/mall/store/useCartStore'
 import MallPageShell from '@/mall/components/MallPageShell'
 import { getCategories } from '@/utils/api'
@@ -92,6 +94,24 @@ export default function CartPage() {
     setQuantity(item.lineKey || String(item.productId), val)
   }
 
+  const handleRemoveItem = (item, { confirm = true } = {}) => {
+    const lineKey = item.lineKey || String(item.productId)
+    const doRemove = () => {
+      removeItem(lineKey)
+      mallToast.success('已从购物车移除')
+    }
+    if (confirm) {
+      Dialog.confirm({
+        content: `确定将「${item.title}」移出购物车？`,
+        confirmText: '删除',
+        cancelText: '取消',
+        onConfirm: doRemove,
+      })
+    } else {
+      doRemove()
+    }
+  }
+
   return (
     <MallPageShell className="bg-cream-50 flex flex-col">
       <NavBar onBack={() => navigate(-1)} className="bg-cream-50/80 backdrop-blur-md">
@@ -118,7 +138,7 @@ export default function CartPage() {
               return (
                 <section
                   key={group.categoryId}
-                  className="rounded-2xl bg-white border border-cream-200 shadow-sm overflow-hidden"
+                  className="rounded-2xl bg-white border border-cream-200 shadow-sm"
                 >
                   {/* 分组头：品类名 + 全选 */}
                   <div className="flex items-center gap-2 px-3 py-2.5 bg-cream-50/80 border-b border-cream-100">
@@ -145,14 +165,11 @@ export default function CartPage() {
                               key: 'delete',
                               text: '删除',
                               color: 'danger',
-                              onClick: () => {
-                                removeItem(lineKey)
-                                mallToast.success('已从购物车移除')
-                              },
+                              onClick: () => handleRemoveItem(item, { confirm: false }),
                             },
                           ]}
                         >
-                          <div className="flex items-center gap-3 p-3 active:bg-cream-50/50 transition-colors">
+                          <div className="flex items-center gap-3 p-3 active:bg-cream-50/50 transition-colors bg-white">
                             <Checkbox
                               checked={item.selected}
                               onChange={() => toggleSelect(lineKey)}
@@ -167,18 +184,28 @@ export default function CartPage() {
                               onClick={() => navigate(`/product/${item.productId}`)}
                             />
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm text-stone-800 line-clamp-2">{item.title}</p>
-                              <div className="flex items-center justify-between mt-2">
-                                <span className="text-olive-700 font-bold">
+                              <p className="text-sm text-stone-800 line-clamp-2 pr-1">{item.title}</p>
+                              <div className="flex items-center justify-between mt-2 gap-2">
+                                <span className="text-olive-700 font-bold shrink-0">
                                   <span className="text-xs">¥</span>
                                   {item.price}
                                 </span>
-                                <Stepper
-                                  value={item.quantity}
-                                  min={1}
-                                  max={item.stock}
-                                  onChange={(val) => handleQuantityChange(item, val)}
-                                />
+                                <div className="flex items-center gap-2">
+                                  <Stepper
+                                    value={item.quantity}
+                                    min={1}
+                                    max={item.stock}
+                                    onChange={(val) => handleQuantityChange(item, val)}
+                                  />
+                                  <button
+                                    type="button"
+                                    aria-label="删除"
+                                    onClick={() => handleRemoveItem(item)}
+                                    className="p-1.5 text-stone-400 hover:text-red-500 active:text-red-600 transition-colors"
+                                  >
+                                    <DeleteOutline fontSize={18} />
+                                  </button>
+                                </div>
                               </div>
                             </div>
                           </div>

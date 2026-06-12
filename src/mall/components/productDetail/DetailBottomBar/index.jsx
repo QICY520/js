@@ -6,6 +6,7 @@ import {
   StarOutline,
   StarFill,
 } from 'antd-mobile-icons'
+import useUserStore from '@/mall/store/useUserStore'
 import mallToast from '@/mall/utils/toast'
 
 export default function DetailBottomBar({
@@ -16,12 +17,14 @@ export default function DetailBottomBar({
   onBuyNow,
 }) {
   const navigate = useNavigate()
-  const [favorited, setFavorited] = useState(false)
+  const isFavorite = useUserStore((s) => s.isFavorite(product?.id))
+  const toggleFavorite = useUserStore((s) => s.toggleFavorite)
   const [cartPulse, setCartPulse] = useState(false)
 
   const handleFavorite = () => {
-    setFavorited((v) => !v)
-    mallToast.info(favorited ? '已取消收藏' : '已加入收藏')
+    if (!product?.id) return
+    const added = toggleFavorite(product.id)
+    mallToast.info(added ? '已加入收藏' : '已取消收藏')
   }
 
   const handleAddCart = () => {
@@ -65,8 +68,8 @@ export default function DetailBottomBar({
           className={`${sideBtn} transition-transform active:scale-90`}
           onClick={handleFavorite}
         >
-          <span className={`transition-all duration-200 ${favorited ? 'scale-125 text-[#FF5000]' : 'scale-100'}`}>
-            {favorited ? <StarFill fontSize={20} /> : <StarOutline fontSize={20} />}
+          <span className={`transition-all duration-200 ${isFavorite ? 'scale-125 text-[#FF5000]' : 'scale-100'}`}>
+            {isFavorite ? <StarFill fontSize={20} /> : <StarOutline fontSize={20} />}
           </span>
           收藏
         </button>

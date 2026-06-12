@@ -15,6 +15,7 @@ import DetailBottomBar from '@/mall/components/productDetail/DetailBottomBar'
 import SkuPickerPopup from '@/mall/components/productDetail/SkuPickerPopup'
 import SectionDivider from '@/mall/components/productDetail/SectionDivider'
 import { buildCartLineKey } from '@/mall/utils/sku'
+import useFootprint from '@/mall/hooks/useFootprint'
 import mallToast from '@/mall/utils/toast'
 
 export default function ProductDetail() {
@@ -23,6 +24,7 @@ export default function ProductDetail() {
   const location = useLocation()
   const zoneState = location.state || {}
   const { isLoggedIn } = useAuthHydration()
+  useFootprint(id)
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [skuVisible, setSkuVisible] = useState(false)

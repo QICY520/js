@@ -9,6 +9,7 @@ import CategoryPage from '@/mall/pages/Category'
 import ProductDetail from '@/mall/pages/ProductDetail'
 import CartPage from '@/mall/pages/Cart'
 import MyPage from '@/mall/pages/My'
+import MessagesPage from '@/mall/pages/Messages'
 import AddressesPage from '@/mall/pages/Addresses'
 import CreateOrderPage from '@/mall/pages/CreateOrder'
 import PaySuccessPage from '@/mall/pages/PaySuccess'
@@ -79,6 +80,7 @@ const router = createBrowserRouter([
           { path: 'gift-card', element: <GiftCardPage /> },
           { path: 'more', element: <MorePage /> },
           { path: 'my', element: <MyPage /> },
+          { path: 'messages', element: <MessagesPage /> },
           { path: 'addresses', element: <AddressesPage /> },
           { path: 'cart', element: <CartPage /> },
           { path: 'checkout', element: <CreateOrderPage /> },
