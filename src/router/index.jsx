@@ -38,7 +38,25 @@ const router = createBrowserRouter([
         ),
       },
 
-      /* ── 商城：全部需登录 ── */
+      /* ── 商城：公用路由（先逛后买，无需登录） ── */
+      { index: true, element: lazyRoute(() => import('@/mall/pages/Home'), HomePageSkeleton) },
+      { path: 'mall', element: lazyRoute(() => import('@/mall/pages/Home'), HomePageSkeleton) },
+      { path: 'search', element: lazyRoute(() => import('@/mall/pages/Search')) },
+      { path: 'category', element: lazyRoute(() => import('@/mall/pages/Category'), CategoryPageSkeleton) },
+      { path: 'product/:id', element: lazyRoute(() => import('@/mall/pages/ProductDetail')) },
+      { path: 'flash-sale', element: lazyRoute(() => import('@/mall/pages/zones/FlashSale')) },
+      { path: 'value-sale', element: lazyRoute(() => import('@/mall/pages/zones/ValueSale')) },
+      { path: 'ranking', element: lazyRoute(() => import('@/mall/pages/zones/Ranking')) },
+      { path: 'coupon', element: lazyRoute(() => import('@/mall/pages/zones/Coupon')) },
+      { path: 'new-arrivals', element: lazyRoute(() => import('@/mall/pages/zones/NewArrivals')) },
+      { path: 'lifestyle', element: lazyRoute(() => import('@/mall/pages/zones/Lifestyle')) },
+      { path: 'gift-card', element: lazyRoute(() => import('@/mall/pages/zones/GiftCard')) },
+      { path: 'more', element: lazyRoute(() => import('@/mall/pages/zones/More')) },
+      { path: 'my', element: lazyRoute(() => import('@/mall/pages/My')) },
+      { path: 'shop/:shopId', element: lazyRoute(() => import('@/mall/pages/Shop/Home')) },
+      { path: 'shop/:shopId/products', element: lazyRoute(() => import('@/mall/pages/Shop/Products')) },
+
+      /* ── 商城：受保护路由（需登录） ── */
       {
         element: (
           <MallAuthGuard>
@@ -46,20 +64,6 @@ const router = createBrowserRouter([
           </MallAuthGuard>
         ),
         children: [
-          { index: true, element: lazyRoute(() => import('@/mall/pages/Home'), HomePageSkeleton) },
-          { path: 'mall', element: lazyRoute(() => import('@/mall/pages/Home'), HomePageSkeleton) },
-          { path: 'search', element: lazyRoute(() => import('@/mall/pages/Search')) },
-          { path: 'category', element: lazyRoute(() => import('@/mall/pages/Category'), CategoryPageSkeleton) },
-          { path: 'product/:id', element: lazyRoute(() => import('@/mall/pages/ProductDetail')) },
-          { path: 'flash-sale', element: lazyRoute(() => import('@/mall/pages/zones/FlashSale')) },
-          { path: 'value-sale', element: lazyRoute(() => import('@/mall/pages/zones/ValueSale')) },
-          { path: 'ranking', element: lazyRoute(() => import('@/mall/pages/zones/Ranking')) },
-          { path: 'coupon', element: lazyRoute(() => import('@/mall/pages/zones/Coupon')) },
-          { path: 'new-arrivals', element: lazyRoute(() => import('@/mall/pages/zones/NewArrivals')) },
-          { path: 'lifestyle', element: lazyRoute(() => import('@/mall/pages/zones/Lifestyle')) },
-          { path: 'gift-card', element: lazyRoute(() => import('@/mall/pages/zones/GiftCard')) },
-          { path: 'more', element: lazyRoute(() => import('@/mall/pages/zones/More')) },
-          { path: 'my', element: lazyRoute(() => import('@/mall/pages/My')) },
           { path: 'messages', element: lazyRoute(() => import('@/mall/pages/Messages')) },
           { path: 'addresses', element: lazyRoute(() => import('@/mall/pages/Addresses')) },
           { path: 'cart', element: lazyRoute(() => import('@/mall/pages/Cart')) },
@@ -67,8 +71,6 @@ const router = createBrowserRouter([
           { path: 'pay/success/:orderId', element: lazyRoute(() => import('@/mall/pages/PaySuccess')) },
           { path: 'orders', element: lazyRoute(() => import('@/mall/pages/Orders')) },
           { path: 'orders/:id', element: lazyRoute(() => import('@/mall/pages/OrderDetail')) },
-          { path: 'shop/:shopId', element: lazyRoute(() => import('@/mall/pages/Shop/Home')) },
-          { path: 'shop/:shopId/products', element: lazyRoute(() => import('@/mall/pages/Shop/Products')) },
           { path: 'shop/:shopId/chat', element: lazyRoute(() => import('@/mall/pages/Shop/Chat')) },
         ],
       },

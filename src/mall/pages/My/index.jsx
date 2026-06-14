@@ -15,6 +15,7 @@ import {
   RightOutline,
 } from 'antd-mobile-icons'
 import useMallUserStore from '@/mall/store/useMallUserStore'
+import useAuthHydration from '@/mall/hooks/useAuthHydration'
 import useUserStore from '@/mall/store/useUserStore'
 import useOrderStore from '@/mall/store/useOrderStore'
 import { getOrders, getProducts, getShops } from '@/utils/api'
@@ -24,6 +25,7 @@ import MallPageShell from '@/mall/components/MallPageShell'
 import EmptyState from '@/mall/components/my/EmptyState'
 import GuessProductCard from '@/mall/components/my/GuessProductCard'
 import mallToast from '@/mall/utils/toast'
+import { buildLoginPath } from '@/mall/constants/auth'
 
 /** 图标按钮悬浮态 */
 const iconBtnClass =
@@ -56,6 +58,7 @@ function shuffleProducts(list) {
 
 export default function MyPage() {
   const navigate = useNavigate()
+  const { isLoggedIn } = useAuthHydration()
   const user = useMallUserStore((s) => s.user)
   const logout = useMallUserStore((s) => s.logout)
   const orders = useOrderStore((s) => s.orders)
@@ -73,12 +76,24 @@ export default function MyPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    Promise.all([
-      getOrders().then((res) => syncOrders(res.data.list)).catch(() => {}),
+    const tasks = [
       getProducts({ status: 1, pageSize: 80 }).then((res) => setProducts(res.data.list)),
       getShops().then((res) => setShops(res.data)),
-    ]).finally(() => setLoading(false))
-  }, [syncOrders])
+    ]
+    if (isLoggedIn) {
+      tasks.unshift(getOrders().then((res) => syncOrders(res.data.list)).catch(() => {}))
+    }
+    Promise.all(tasks).finally(() => setLoading(false))
+  }, [syncOrders, isLoggedIn])
+
+  const goLogin = () => navigate(buildLoginPath('/my'))
+
+  const requireLogin = (redirectTo = '/my') => {
+    if (isLoggedIn) return true
+    mallToast.info('请先登录')
+    navigate(buildLoginPath(redirectTo))
+    return false
+  }
 
   const orderCountMap = useMemo(() => {
     const map = {}
@@ -104,6 +119,7 @@ export default function MyPage() {
   )
 
   const handleShortcut = (key) => {
+    if (!requireLogin('/my')) return
     if (key === 'express') {
       navigate(`/orders?status=${ORDER_STATUS.PENDING_RECEIVE}`)
       return
@@ -124,7 +140,7 @@ export default function MyPage() {
   const handleLogout = () => {
     logout()
     mallToast.success('已退出登录')
-    navigate('/login', { replace: true })
+    navigate('/', { replace: true })
   }
 
   const renderGuessGrid = () => {
@@ -263,28 +279,48 @@ export default function MyPage() {
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-olive-700/90 via-olive-600/60 to-gray-100" />
         <div className="relative px-5 pt-10 pb-6">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full bg-white/20 border-2 border-white/30 flex items-center justify-center overflow-hidden shrink-0">
-              {user?.avatar ? (
-                <Image src={user.avatar} width={56} height={56} fit="cover" className="rounded-full" />
-              ) : (
-                <UserOutline fontSize={24} className="text-white/80" />
-              )}
+          {isLoggedIn ? (
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-full bg-white/20 border-2 border-white/30 flex items-center justify-center overflow-hidden shrink-0">
+                {user?.avatar ? (
+                  <Image src={user.avatar} width={56} height={56} fit="cover" className="rounded-full" />
+                ) : (
+                  <UserOutline fontSize={24} className="text-white/80" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h2 className="text-base font-bold text-white truncate">
+                  {user?.nickname || user?.username || '商城用户'}
+                </h2>
+                <p className="text-[11px] text-white/70 mt-0.5">LUMIÈRE 极简生活美学</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => mallToast.info('设置功能开发中')}
+                className="p-2 rounded-full text-white/80 transition-all duration-200 hover:bg-white/15 hover:text-white hover:scale-110 active:scale-95"
+              >
+                <SetOutline fontSize={20} />
+              </button>
             </div>
-            <div className="flex-1 min-w-0">
-              <h2 className="text-base font-bold text-white truncate">
-                {user?.nickname || user?.username || '商城用户'}
-              </h2>
-              <p className="text-[11px] text-white/70 mt-0.5">LUMIÈRE 极简生活美学</p>
+          ) : (
+            <div className="flex flex-col items-center text-center py-2">
+              <div className="w-16 h-16 rounded-full bg-white/15 border border-white/25 flex items-center justify-center mb-3">
+                <UserOutline fontSize={32} className="text-white/90" />
+              </div>
+              <p className="text-sm text-white/80 mb-4">登录后查看订单、收藏与专属服务</p>
+              <div className="flex gap-3 w-full max-w-xs">
+                <Button
+                  color="primary"
+                  shape="rounded"
+                  className="flex-1 !h-10 !text-sm"
+                  style={{ '--background': '#fdfcf9', '--text-color': '#4a6340' }}
+                  onClick={goLogin}
+                >
+                  登录 / 注册
+                </Button>
+              </div>
             </div>
-            <button
-              type="button"
-              onClick={() => mallToast.info('设置功能开发中')}
-              className="p-2 rounded-full text-white/80 transition-all duration-200 hover:bg-white/15 hover:text-white hover:scale-110 active:scale-95"
-            >
-              <SetOutline fontSize={20} />
-            </button>
-          </div>
+          )}
         </div>
       </section>
 
@@ -322,7 +358,7 @@ export default function MyPage() {
             <h3 className="text-sm font-semibold text-stone-800">我的订单</h3>
             <button
               type="button"
-              onClick={() => navigate('/orders')}
+              onClick={() => requireLogin('/orders') && navigate('/orders')}
               className={`flex items-center gap-0.5 text-xs text-stone-400 px-2 py-1 rounded-lg ${textLinkClass}`}
             >
               全部订单 <RightOutline fontSize={12} />
@@ -336,7 +372,7 @@ export default function MyPage() {
                 <button
                   key={entry.key}
                   type="button"
-                  onClick={() => navigate(`/orders?status=${entry.status}`)}
+                  onClick={() => requireLogin(`/orders?status=${entry.status}`) && navigate(`/orders?status=${entry.status}`)}
                   className={`group flex flex-col items-center gap-1 py-1 flex-1 rounded-xl ${iconBtnClass}`}
                 >
                   <span className="relative transition-transform duration-200 group-hover:scale-110">
@@ -368,18 +404,20 @@ export default function MyPage() {
         </div>
       </section>
 
-      <section className="mx-4 pb-4">
-        <Button
-          block
-          fill="outline"
-          shape="rounded"
-          onClick={handleLogout}
-          className="transition-all duration-200 hover:!border-stone-400 hover:!text-stone-700 hover:shadow-sm hover:scale-[1.01] active:scale-[0.99]"
-          style={{ '--border-color': '#d6d3d1', '--text-color': '#78716c' }}
-        >
-          退出登录
-        </Button>
-      </section>
+      {isLoggedIn && (
+        <section className="mx-4 pb-4">
+          <Button
+            block
+            fill="outline"
+            shape="rounded"
+            onClick={handleLogout}
+            className="transition-all duration-200 hover:!border-stone-400 hover:!text-stone-700 hover:shadow-sm hover:scale-[1.01] active:scale-[0.99]"
+            style={{ '--border-color': '#d6d3d1', '--text-color': '#78716c' }}
+          >
+            退出登录
+          </Button>
+        </section>
+      )}
     </MallPageShell>
   )
 }

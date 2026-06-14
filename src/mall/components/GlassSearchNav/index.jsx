@@ -2,22 +2,21 @@ import { useNavigate } from 'react-router-dom'
 import { SearchBar } from 'antd-mobile'
 import { LinkOutline, ShopbagOutline, UserCircleOutline } from 'antd-mobile-icons'
 import useCartStore from '@/mall/store/useCartStore'
-import useMallUserStore from '@/mall/store/useMallUserStore'
 import useAuthHydration from '@/mall/hooks/useAuthHydration'
 import mallToast from '@/mall/utils/toast'
+import { buildLoginPath } from '@/mall/constants/auth'
 
 export default function GlassSearchNav({ onSearch }) {
   const navigate = useNavigate()
   const { isLoggedIn, user } = useAuthHydration()
-  const logout = useMallUserStore((s) => s.logout)
   const cartCount = useCartStore((s) =>
     s.items.reduce((sum, i) => sum + i.quantity, 0),
   )
 
   const handleCartClick = () => {
     if (!isLoggedIn) {
-      mallToast.info('请先登录后查看购物车')
-      navigate('/login', { state: { from: '/cart' } })
+      mallToast.info('请先登录')
+      navigate(buildLoginPath('/cart'))
       return
     }
     navigate('/cart')
@@ -25,12 +24,10 @@ export default function GlassSearchNav({ onSearch }) {
 
   const handleUserClick = () => {
     if (isLoggedIn) {
-      logout()
-      mallToast.info('已退出登录')
-      navigate('/login', { replace: true })
-    } else {
-      navigate('/login', { state: { from: '/' } })
+      navigate('/my')
+      return
     }
+    navigate(buildLoginPath('/'))
   }
 
   return (

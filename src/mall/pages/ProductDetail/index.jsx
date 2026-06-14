@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { getProductById } from '@/utils/api'
 import useCartStore from '@/mall/store/useCartStore'
 import useAuthHydration from '@/mall/hooks/useAuthHydration'
+import { buildLoginPath } from '@/mall/constants/auth'
 import { HomePageSkeleton } from '@/mall/components/PageSkeleton'
 import ImmersiveHeader from '@/mall/components/productDetail/ImmersiveHeader'
 import ProductGallery from '@/mall/components/productDetail/ProductGallery'
@@ -39,17 +40,18 @@ export default function ProductDetail() {
       .finally(() => setLoading(false))
   }, [id])
 
-  const requireAuth = (from) => {
+  const requireAuth = () => {
     if (!isLoggedIn) {
-      mallToast.info('请先登录后再购买')
-      navigate('/login', { state: { from } })
+      mallToast.info('请先登录')
+      const redirectTo = location.pathname + location.search
+      navigate(buildLoginPath(redirectTo))
       return false
     }
     return true
   }
 
   const openSkuPicker = (action) => {
-    if (!requireAuth(action === 'buy' ? '/checkout' : '/cart')) return
+    if (!requireAuth()) return
     if (!product || product.stock === 0) {
       mallToast.fail('商品已售罄，暂时无法购买')
       return
@@ -82,7 +84,11 @@ export default function ProductDetail() {
   }
 
   const handleCartNav = () => {
-    if (!requireAuth('/cart')) return
+    if (!isLoggedIn) {
+      mallToast.info('请先登录')
+      navigate(buildLoginPath(location.pathname + location.search))
+      return
+    }
     navigate('/cart')
   }
 

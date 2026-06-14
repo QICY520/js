@@ -8,6 +8,7 @@ import { login as loginApi } from '@/utils/api'
 import { isAdminRole } from '@/utils/auth'
 import mallToast from '@/mall/utils/toast'
 import { PASSWORD_RULE, USERNAME_RULES, LOGIN_PASSWORD_RULES } from '@/mall/constants/validation'
+import { resolveAuthRedirect } from '@/mall/constants/auth'
 
 const TABS = [
   { key: 'login', label: '登录' },
@@ -33,8 +34,8 @@ export default function AuthPage({ defaultTab = 'login' }) {
   }
 
   const redirectAfterAuth = () => {
-    const from = location.state?.from || '/'
-    setTimeout(() => navigate(from, { replace: true }), 300)
+    const target = resolveAuthRedirect(location.search, location.state?.from)
+    setTimeout(() => navigate(target, { replace: true }), 300)
   }
 
   const handleLogin = async (values) => {

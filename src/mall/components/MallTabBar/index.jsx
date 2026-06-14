@@ -9,6 +9,7 @@ import {
 import useCartStore from '@/mall/store/useCartStore'
 import useUserStore from '@/mall/store/useUserStore'
 import useAuthHydration from '@/mall/hooks/useAuthHydration'
+import { buildLoginPath } from '@/mall/constants/auth'
 import mallToast from '@/mall/utils/toast'
 
 const TABS = [
@@ -16,7 +17,7 @@ const TABS = [
   { key: '/category', label: '分类', icon: AppstoreOutline, match: (p) => p === '/category', auth: false },
   { key: '/messages', label: '消息', icon: MessageOutline, match: (p) => p === '/messages', auth: true },
   { key: '/cart', label: '购物车', icon: ShopbagOutline, match: (p) => p === '/cart', auth: true },
-  { key: '/my', label: '我的', icon: UnorderedListOutline, match: (p) => p === '/my' || p.startsWith('/orders') || p.startsWith('/addresses'), auth: true },
+  { key: '/my', label: '我的', icon: UnorderedListOutline, match: (p) => p === '/my' || p.startsWith('/orders') || p.startsWith('/addresses'), auth: false },
 ]
 
 export default function MallTabBar() {
@@ -31,7 +32,7 @@ export default function MallTabBar() {
   const handleTabClick = (tab) => {
     if (tab.auth && !isLoggedIn) {
       mallToast.info('请先登录')
-      navigate('/login', { state: { from: tab.key } })
+      navigate(buildLoginPath(tab.key))
       return
     }
     navigate(tab.key)
