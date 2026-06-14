@@ -15,6 +15,7 @@ export default function EmptyState({ description = '暂无内容', actionLabel =
         shape="rounded"
         size="small"
         onClick={() => navigate('/')}
+        className="transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
         style={{ '--background': '#4a6340' }}
       >
         {actionLabel}

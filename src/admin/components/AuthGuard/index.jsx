@@ -12,7 +12,7 @@ export default function AuthGuard({ children }) {
   if (!adminLoggedIn) {
     return (
       <Navigate
-        to="/login"
+        to="/admin/login"
         state={{ from: location.pathname + location.search }}
         replace
       />

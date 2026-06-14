@@ -17,15 +17,22 @@ import {
   PayCircleOutline,
   RightOutline,
   AddOutline,
-  CheckShieldOutline,
 } from 'antd-mobile-icons'
 import useCartStore from '@/mall/store/useCartStore'
 import useOrderStore from '@/mall/store/useOrderStore'
 import useAddressStore from '@/mall/store/useAddressStore'
-import { createOrder, payOrder } from '@/utils/api'
+import { createOrder, payOrder, cancelOrder } from '@/utils/api'
 import { normalizeOrder } from '@/mall/constants/order'
 import { ADDRESS_TAGS, ADDRESS_TAG_COLORS } from '@/mall/constants/address'
+import {
+  ADDRESS_NAME_RULES,
+  ADDRESS_PHONE_RULES,
+  ADDRESS_REGION_RULES,
+  ADDRESS_DETAIL_RULES,
+} from '@/mall/constants/validation'
 import mallToast from '@/mall/utils/toast'
+import usePayCountdown from '@/mall/hooks/usePayCountdown'
+import PayOrderPopup from '@/mall/components/order/PayOrderPopup'
 
 const PAYMENT_METHODS = [
   { value: 'wechat', label: '微信支付', icon: PayCircleOutline, color: '#07c160' },
@@ -39,7 +46,9 @@ export default function CreateOrderPage() {
   const getSelectedItems = useCartStore((s) => s.getSelectedItems)
   const getTotalPrice = useCartStore((s) => s.getTotalPrice)
   const removeSelected = useCartStore((s) => s.removeSelected)
+  const restoreFromOrderItems = useCartStore((s) => s.restoreFromOrderItems)
   const addOrder = useOrderStore((s) => s.addOrder)
+  const removeOrder = useOrderStore((s) => s.removeOrder)
   const addresses = useAddressStore((s) => s.addresses)
   const addAddress = useAddressStore((s) => s.addAddress)
   const updateAddress = useAddressStore((s) => s.updateAddress)
@@ -49,15 +58,16 @@ export default function CreateOrderPage() {
   const [paymentMethod, setPaymentMethod] = useState('wechat')
   const [payPopupVisible, setPayPopupVisible] = useState(false)
   const [pendingOrder, setPendingOrder] = useState(null)
-  const [payPassword, setPayPassword] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [paying, setPaying] = useState(false)
+  const [cancelling, setCancelling] = useState(false)
+  const { formatted: payCountdown, expired: payExpired } = usePayCountdown(payPopupVisible)
 
   // 地址相关弹窗
   const [addressListVisible, setAddressListVisible] = useState(false)
   const [addressFormVisible, setAddressFormVisible] = useState(false)
   const [editingAddrId, setEditingAddrId] = useState(null)
-  const [addressForm, setAddressForm] = useState(EMPTY_FORM)
+  const [addressFormInst] = Form.useForm()
 
   const selectedItems = getSelectedItems()
   const totalPrice = getTotalPrice()
@@ -103,6 +113,7 @@ export default function CreateOrderPage() {
       })
       mallToast.clear()
       mallToast.success('订单创建成功，请完成支付')
+      removeSelected()
       setPendingOrder(res.data)
       setPayPopupVisible(true)
     } catch (err) {
@@ -118,28 +129,34 @@ export default function CreateOrderPage() {
     }
   }
 
-  const handleConfirmPay = async () => {
+  const handleConfirmPay = async ({ payType, payPassword }) => {
     if (!pendingOrder) return
-
-    // 强制校验支付密码
-    if (!payPassword || payPassword.trim() === '') {
-      mallToast.fail('请输入支付密码')
+    if (payExpired) {
+      mallToast.fail('支付已超时，请重新下单')
+      setPayPopupVisible(false)
+      setPendingOrder(null)
       return
     }
-    if (payPassword !== '123456') {
-      mallToast.fail('支付密码错误')
-      return
+
+    if (payType === 'password') {
+      if (!payPassword || payPassword.trim() === '') {
+        mallToast.fail('请输入支付密码')
+        return
+      }
+      if (payPassword !== '123456') {
+        mallToast.fail('支付密码错误')
+        return
+      }
     }
 
     setPaying(true)
     mallToast.loading('支付处理中...')
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      await new Promise((resolve) => setTimeout(resolve, payType === 'qrcode' ? 800 : 1500))
       const payRes = await payOrder(pendingOrder.id, { paymentMethod })
       const paidOrder = normalizeOrder(payRes.data)
 
       addOrder(paidOrder)
-      removeSelected()
       mallToast.clear()
       setPayPopupVisible(false)
       mallToast.success('支付成功！')
@@ -163,17 +180,43 @@ export default function CreateOrderPage() {
     }
   }
 
+  const handleCancelPay = async () => {
+    if (!pendingOrder || paying || cancelling) return
+    const confirmed = await Dialog.confirm({
+      content: '确定取消支付吗？未支付订单将被关闭',
+      confirmText: '取消支付',
+      cancelText: '继续支付',
+    })
+    if (!confirmed) return
+
+    setCancelling(true)
+    try {
+      await cancelOrder(pendingOrder.id)
+      removeOrder(pendingOrder.id)
+      restoreFromOrderItems(pendingOrder.items)
+      setPendingOrder(null)
+      setPayPopupVisible(false)
+      mallToast.success('已取消支付，商品已退回购物车')
+      navigate('/cart', { replace: true })
+    } catch (err) {
+      mallToast.fail(err.message || '取消失败')
+    } finally {
+      setCancelling(false)
+    }
+  }
+
   /** 打开添加地址表单 */
   const openAddForm = () => {
     setEditingAddrId(null)
-    setAddressForm(EMPTY_FORM)
+    addressFormInst.resetFields()
+    addressFormInst.setFieldsValue(EMPTY_FORM)
     setAddressFormVisible(true)
   }
 
   /** 打开编辑地址表单 */
   const openEditForm = (addr) => {
     setEditingAddrId(addr.id)
-    setAddressForm({
+    addressFormInst.setFieldsValue({
       name: addr.name,
       phone: addr.phone,
       region: addr.region,
@@ -184,21 +227,22 @@ export default function CreateOrderPage() {
   }
 
   /** 提交地址表单 */
-  const handleAddressFormSubmit = () => {
-    const { name, phone, region, detail } = addressForm
-    if (!name || name.length < 2) { mallToast.fail('收货人姓名至少 2 位'); return }
-    if (!/^1[3-9]\d{9}$/.test(phone)) { mallToast.fail('请输入正确的手机号'); return }
-    if (!region) { mallToast.fail('请填写所在地区'); return }
-    if (!detail || detail.length < 5) { mallToast.fail('详细地址至少 5 个字'); return }
-
-    if (editingAddrId) {
-      updateAddress(editingAddrId, addressForm)
-      mallToast.success('地址已更新')
-    } else {
-      addAddress({ ...addressForm, isDefault: addresses.length === 0 })
-      mallToast.success('地址已添加')
+  const handleAddressFormSubmit = async () => {
+    try {
+      const values = await addressFormInst.validateFields()
+      if (editingAddrId) {
+        updateAddress(editingAddrId, values)
+        mallToast.success('地址已更新')
+      } else {
+        const newId = Math.max(...addresses.map((a) => a.id), 0) + 1
+        addAddress({ ...values, isDefault: addresses.length === 0 })
+        setSelectedAddressId(newId)
+        mallToast.success('地址已添加')
+      }
+      setAddressFormVisible(false)
+    } catch {
+      mallToast.info('请完善地址信息')
     }
-    setAddressFormVisible(false)
   }
 
   /** 选中地址并关闭列表 */
@@ -230,7 +274,7 @@ export default function CreateOrderPage() {
         确认下单
       </NavBar>
 
-      <div className="max-w-lg mx-auto px-4 space-y-4 pt-3">
+      <div className="mall-container space-y-4 pt-3">
         {/* 地址选择区 */}
         <section
           className="rounded-2xl bg-white p-4 shadow-md flex items-center gap-3 active:bg-cream-50 transition-colors"
@@ -300,7 +344,7 @@ export default function CreateOrderPage() {
 
       {/* 底部结算栏 */}
       <footer className="fixed bottom-0 left-0 right-0 bg-white border-t border-cream-200 px-4 py-3 safe-bottom shadow-[0_-4px_20px_rgba(0,0,0,0.04)]">
-        <div className="max-w-lg mx-auto flex items-center gap-4">
+        <div className="mall-main flex items-center gap-4">
           <div className="flex-1">
             <span className="text-xs text-stone-500">合计 </span>
             <span className="text-xl font-bold text-stone-900">
@@ -320,50 +364,18 @@ export default function CreateOrderPage() {
       </footer>
 
       {/* 支付半屏弹窗 */}
-      <Popup
+      <PayOrderPopup
         visible={payPopupVisible}
-        onMaskClick={() => !paying && setPayPopupVisible(false)}
-        bodyStyle={{
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-          minHeight: '45vh',
-          padding: '20px 20px 32px',
-        }}
-      >
-        <h3 className="text-lg font-semibold text-center text-stone-800 mb-1">确认支付</h3>
-        <p className="text-center text-2xl font-bold text-stone-900 mb-6">
-          <span className="text-base">¥</span>
-          {Number(displayTotal).toFixed(2)}
-        </p>
-
-        <div className="rounded-2xl bg-gray-50 p-4 mb-4">
-          <div className="flex items-center gap-1 mb-2">
-            <CheckShieldOutline fontSize={14} className="text-red-400" />
-            <p className="text-xs text-stone-500">请输入支付密码（测试密码：123456）</p>
-          </div>
-          <Input
-            type="password"
-            placeholder="请输入 6 位支付密码"
-            value={payPassword}
-            onChange={setPayPassword}
-            maxLength={6}
-            className="bg-white rounded-xl"
-          />
-        </div>
-
-        <Button
-          block
-          color="danger"
-          shape="rounded"
-          size="large"
-          loading={paying}
-          onClick={handleConfirmPay}
-          className="!rounded-full"
-        >
-          确认支付
-        </Button>
-        <p className="text-center text-xs text-stone-400 mt-4">支付即表示同意《用户购买协议》</p>
-      </Popup>
+        amount={displayTotal}
+        paymentMethod={paymentMethod}
+        payExpired={payExpired}
+        payCountdown={payCountdown}
+        paying={paying}
+        cancelling={cancelling}
+        onClose={() => setPayPopupVisible(false)}
+        onConfirmPay={handleConfirmPay}
+        onCancelPay={handleCancelPay}
+      />
 
       {/* 地址选择弹窗 */}
       <Popup
@@ -453,44 +465,21 @@ export default function CreateOrderPage() {
           {editingAddrId ? '编辑地址' : '新增地址'}
         </h3>
 
-        <Form layout="vertical">
-          <Form.Item label="收货人" required>
-            <Input
-              placeholder="请输入收货人姓名"
-              value={addressForm.name}
-              onChange={(v) => setAddressForm((f) => ({ ...f, name: v }))}
-              maxLength={20}
-            />
+        <Form form={addressFormInst} layout="vertical" initialValues={EMPTY_FORM}>
+          <Form.Item name="name" label="收货人" rules={ADDRESS_NAME_RULES}>
+            <Input placeholder="请输入收货人姓名" maxLength={20} />
           </Form.Item>
-          <Form.Item label="手机号" required>
-            <Input
-              placeholder="请输入手机号"
-              value={addressForm.phone}
-              onChange={(v) => setAddressForm((f) => ({ ...f, phone: v }))}
-              maxLength={11}
-              type="tel"
-            />
+          <Form.Item name="phone" label="手机号" rules={ADDRESS_PHONE_RULES}>
+            <Input placeholder="请输入手机号" maxLength={11} type="tel" />
           </Form.Item>
-          <Form.Item label="所在地区" required>
-            <Input
-              placeholder="如：上海市 浦东新区"
-              value={addressForm.region}
-              onChange={(v) => setAddressForm((f) => ({ ...f, region: v }))}
-            />
+          <Form.Item name="region" label="所在地区" rules={ADDRESS_REGION_RULES}>
+            <Input placeholder="如：上海市 浦东新区" />
           </Form.Item>
-          <Form.Item label="详细地址" required>
-            <Input
-              placeholder="街道、楼栋、门牌号等"
-              value={addressForm.detail}
-              onChange={(v) => setAddressForm((f) => ({ ...f, detail: v }))}
-              maxLength={120}
-            />
+          <Form.Item name="detail" label="详细地址" rules={ADDRESS_DETAIL_RULES}>
+            <Input placeholder="街道、楼栋、门牌号等" maxLength={120} />
           </Form.Item>
-          <Form.Item label="标签">
-            <Radio.Group
-              value={addressForm.tag}
-              onChange={(v) => setAddressForm((f) => ({ ...f, tag: v }))}
-            >
+          <Form.Item name="tag" label="标签">
+            <Radio.Group>
               <div className="flex gap-2">
                 {ADDRESS_TAGS.map((tag) => (
                   <Radio key={tag} value={tag}>{tag}</Radio>

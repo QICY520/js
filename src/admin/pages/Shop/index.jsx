@@ -14,6 +14,7 @@ import {
 } from 'antd'
 import { EditOutlined } from '@ant-design/icons'
 import { getShops, updateShop } from '@/utils/api'
+import { IMAGE_URL_RULES, TEXT_REQUIRED_RULES } from '@/mall/constants/validation'
 
 const { Title } = Typography
 
@@ -143,21 +144,21 @@ export default function ShopManagement() {
           <Form.Item
             name="shopLogo"
             label="店铺 Logo URL"
-            rules={[{ required: true, message: '请输入 Logo 地址' }]}
+            rules={IMAGE_URL_RULES}
           >
             <Input placeholder="https://..." />
           </Form.Item>
           <Form.Item
             name="promoNotice"
             label="营销公告"
-            rules={[{ required: true, message: '请输入营销公告' }]}
+            rules={TEXT_REQUIRED_RULES('营销公告', 2, 40)}
           >
             <Input placeholder="如：官方立减 · 丝纺节狂欢" maxLength={40} showCount />
           </Form.Item>
           <Form.Item
             name="shopDescription"
             label="店铺简介"
-            rules={[{ required: true, message: '请输入店铺简介' }]}
+            rules={TEXT_REQUIRED_RULES('店铺简介', 5, 120)}
           >
             <Input.TextArea rows={3} placeholder="店铺介绍" maxLength={120} showCount />
           </Form.Item>

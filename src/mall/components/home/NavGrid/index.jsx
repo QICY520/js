@@ -54,7 +54,7 @@ export default function NavGrid({ onItemClick }) {
 
   return (
     <section className="px-4 mt-4">
-      <div className="grid grid-cols-4 grid-rows-2 gap-y-5 gap-x-2">
+      <div className="grid grid-cols-4 md:grid-cols-8 grid-rows-2 md:grid-rows-1 gap-y-5 gap-x-2 md:gap-x-3">
         {items.map((item) => {
           const Icon = ICON_MAP[item.icon] || AppOutline
           return (

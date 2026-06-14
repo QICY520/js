@@ -40,7 +40,7 @@ export default function MallTabBar() {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-2xl border-t border-cream-200/60 safe-bottom"
       style={{ boxShadow: '0 -0.5px 0 rgba(0,0,0,0.05)' }}>
-      <div className="max-w-lg mx-auto flex">
+      <div className="mall-fixed-inner flex">
         {TABS.map((tab) => {
           const { key, label, icon: Icon, match } = tab
           const active = match(location.pathname)

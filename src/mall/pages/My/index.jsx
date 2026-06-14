@@ -25,6 +25,16 @@ import EmptyState from '@/mall/components/my/EmptyState'
 import GuessProductCard from '@/mall/components/my/GuessProductCard'
 import mallToast from '@/mall/utils/toast'
 
+/** 图标按钮悬浮态 */
+const iconBtnClass =
+  'rounded-xl px-3 py-2 transition-all duration-200 hover:bg-cream-50 hover:scale-105 hover:shadow-sm active:scale-95'
+/** 文字链悬浮态 */
+const textLinkClass =
+  'transition-colors duration-200 hover:text-olive-600'
+/** 列表行悬浮态 */
+const rowHoverClass =
+  'transition-colors duration-200 hover:bg-cream-50 active:bg-cream-100'
+
 const TOP_SHORTCUTS = [
   { key: 'express', label: '快递', icon: TruckOutline, color: '#4a6340' },
   { key: 'favorites', label: '收藏', icon: HeartOutline, color: '#ef4444' },
@@ -120,12 +130,11 @@ export default function MyPage() {
   const renderGuessGrid = () => {
     if (loading) return <p className="text-center text-stone-400 py-8 text-sm">加载中…</p>
     if (!guessProducts.length) return <EmptyState description="暂无推荐商品" />
-    const left = guessProducts.filter((_, i) => i % 2 === 0)
-    const right = guessProducts.filter((_, i) => i % 2 === 1)
     return (
-      <div className="flex gap-2 px-3">
-        <div className="flex-1 min-w-0">{left.map((p) => <GuessProductCard key={p.id} product={p} />)}</div>
-        <div className="flex-1 min-w-0">{right.map((p) => <GuessProductCard key={p.id} product={p} />)}</div>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 px-3">
+        {guessProducts.map((p) => (
+          <GuessProductCard key={p.id} product={p} />
+        ))}
       </div>
     )
   }
@@ -137,11 +146,11 @@ export default function MyPage() {
     return (
       <div className="px-3 space-y-3">
         {reviews.map((review) => (
-          <article key={review.id} className="rounded-2xl bg-white p-3 border border-cream-200">
+          <article key={review.id} className="rounded-2xl bg-white p-3 border border-cream-200 transition-all duration-200 hover:border-olive-200 hover:shadow-md">
             <button
               type="button"
               onClick={() => navigate(`/product/${review.productId}`)}
-              className="flex gap-3 w-full text-left"
+              className={`flex gap-3 w-full text-left rounded-xl ${rowHoverClass}`}
             >
               <Image src={review.productImage} width={64} height={64} fit="cover" className="rounded-lg shrink-0" />
               <div className="flex-1 min-w-0">
@@ -166,17 +175,16 @@ export default function MyPage() {
           </section>
         )
       }
-      const left = favoriteProducts.filter((_, i) => i % 2 === 0)
-      const right = favoriteProducts.filter((_, i) => i % 2 === 1)
       return (
         <section className="mx-4 mt-3 rounded-2xl bg-white border border-cream-200 overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-cream-100">
             <h3 className="text-sm font-semibold text-stone-800">我的收藏</h3>
-            <button type="button" onClick={() => setPanel(null)} className="text-xs text-stone-400">收起</button>
+            <button type="button" onClick={() => setPanel(null)} className={`text-xs text-stone-400 px-2 py-1 rounded-lg ${textLinkClass}`}>收起</button>
           </div>
-          <div className="flex gap-2 px-3 py-3">
-            <div className="flex-1 min-w-0">{left.map((p) => <GuessProductCard key={p.id} product={p} />)}</div>
-            <div className="flex-1 min-w-0">{right.map((p) => <GuessProductCard key={p.id} product={p} />)}</div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 px-3 py-3">
+            {favoriteProducts.map((p) => (
+              <GuessProductCard key={p.id} product={p} />
+            ))}
           </div>
         </section>
       )
@@ -194,14 +202,14 @@ export default function MyPage() {
         <section className="mx-4 mt-3 rounded-2xl bg-white border border-cream-200 overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-cream-100">
             <h3 className="text-sm font-semibold text-stone-800">关注的店铺</h3>
-            <button type="button" onClick={() => setPanel(null)} className="text-xs text-stone-400">收起</button>
+            <button type="button" onClick={() => setPanel(null)} className={`text-xs text-stone-400 px-2 py-1 rounded-lg ${textLinkClass}`}>收起</button>
           </div>
           {followedShopList.map((shop) => (
             <button
               key={shop.shopId}
               type="button"
               onClick={() => navigate(`/shop/${shop.shopId}`)}
-              className="w-full flex items-center gap-3 px-4 py-3 border-b border-cream-50 last:border-0 active:bg-cream-50"
+              className={`w-full flex items-center gap-3 px-4 py-3 border-b border-cream-50 last:border-0 ${rowHoverClass}`}
             >
               <img src={shop.shopLogo} alt="" className="w-10 h-10 rounded-lg object-cover" />
               <div className="flex-1 text-left min-w-0">
@@ -227,7 +235,7 @@ export default function MyPage() {
         <section className="mx-4 mt-3 rounded-2xl bg-white border border-cream-200 overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-cream-100">
             <h3 className="text-sm font-semibold text-stone-800">浏览足迹</h3>
-            <button type="button" onClick={() => setPanel(null)} className="text-xs text-stone-400">收起</button>
+            <button type="button" onClick={() => setPanel(null)} className={`text-xs text-stone-400 px-2 py-1 rounded-lg ${textLinkClass}`}>收起</button>
           </div>
           <div className="flex gap-2 overflow-x-auto px-3 py-3">
             {footprintProducts.map((p) => (
@@ -235,9 +243,9 @@ export default function MyPage() {
                 key={p.id}
                 type="button"
                 onClick={() => navigate(`/product/${p.id}`)}
-                className="shrink-0 w-20 text-left"
+                className="group shrink-0 w-20 text-left rounded-lg p-1 transition-all duration-200 hover:bg-cream-50 hover:scale-105 active:scale-95"
               >
-                <img src={p.image} alt="" className="w-20 h-20 rounded-lg object-cover" />
+                <img src={p.image} alt="" className="w-20 h-20 rounded-lg object-cover transition-shadow duration-200 group-hover:shadow-md" />
                 <p className="text-[10px] text-stone-600 mt-1 line-clamp-2">¥{p.price}</p>
               </button>
             ))}
@@ -269,7 +277,11 @@ export default function MyPage() {
               </h2>
               <p className="text-[11px] text-white/70 mt-0.5">LUMIÈRE 极简生活美学</p>
             </div>
-            <button type="button" onClick={() => mallToast.info('设置功能开发中')} className="text-white/80">
+            <button
+              type="button"
+              onClick={() => mallToast.info('设置功能开发中')}
+              className="p-2 rounded-full text-white/80 transition-all duration-200 hover:bg-white/15 hover:text-white hover:scale-110 active:scale-95"
+            >
               <SetOutline fontSize={20} />
             </button>
           </div>
@@ -285,9 +297,9 @@ export default function MyPage() {
                 key={key}
                 type="button"
                 onClick={() => handleShortcut(key)}
-                className="flex flex-col items-center gap-1.5 px-2 active:scale-95 transition-transform"
+                className={`group flex flex-col items-center gap-1.5 ${iconBtnClass}`}
               >
-                <span className="relative">
+                <span className="relative transition-transform duration-200 group-hover:scale-110">
                   <Icon fontSize={24} style={{ color }} />
                   {key === 'favorites' && favorites.length > 0 && (
                     <Badge content={favorites.length} style={{ '--color': '#ef4444', position: 'absolute', top: -4, right: -10 }} />
@@ -296,7 +308,7 @@ export default function MyPage() {
                     <Badge content={followedShops.length} style={{ '--color': '#2563eb', position: 'absolute', top: -4, right: -10 }} />
                   )}
                 </span>
-                <span className="text-[11px] text-stone-600">{label}</span>
+                <span className="text-[11px] text-stone-600 group-hover:text-olive-700 transition-colors">{label}</span>
               </button>
             ))}
           </div>
@@ -308,7 +320,11 @@ export default function MyPage() {
         <div className="rounded-2xl bg-white border border-cream-200 px-3 py-4">
           <div className="flex items-center justify-between mb-3 px-1">
             <h3 className="text-sm font-semibold text-stone-800">我的订单</h3>
-            <button type="button" onClick={() => navigate('/orders')} className="flex items-center gap-0.5 text-xs text-stone-400">
+            <button
+              type="button"
+              onClick={() => navigate('/orders')}
+              className={`flex items-center gap-0.5 text-xs text-stone-400 px-2 py-1 rounded-lg ${textLinkClass}`}
+            >
               全部订单 <RightOutline fontSize={12} />
             </button>
           </div>
@@ -321,15 +337,15 @@ export default function MyPage() {
                   key={entry.key}
                   type="button"
                   onClick={() => navigate(`/orders?status=${entry.status}`)}
-                  className="flex flex-col items-center gap-1 py-1 flex-1 active:scale-95 transition-transform"
+                  className={`group flex flex-col items-center gap-1 py-1 flex-1 rounded-xl ${iconBtnClass}`}
                 >
-                  <span className="relative">
+                  <span className="relative transition-transform duration-200 group-hover:scale-110">
                     <Icon fontSize={22} style={{ color: entry.color }} />
                     {count > 0 && (
                       <Badge content={count > 99 ? '99+' : count} style={{ '--color': '#ef4444', position: 'absolute', top: -6, right: -10 }} />
                     )}
                   </span>
-                  <span className="text-[10px] text-stone-600 whitespace-nowrap">{entry.label}</span>
+                  <span className="text-[10px] text-stone-600 whitespace-nowrap group-hover:text-olive-700 transition-colors">{entry.label}</span>
                 </button>
               )
             })}
@@ -353,7 +369,14 @@ export default function MyPage() {
       </section>
 
       <section className="mx-4 pb-4">
-        <Button block fill="outline" shape="rounded" onClick={handleLogout} style={{ '--border-color': '#d6d3d1', '--text-color': '#78716c' }}>
+        <Button
+          block
+          fill="outline"
+          shape="rounded"
+          onClick={handleLogout}
+          className="transition-all duration-200 hover:!border-stone-400 hover:!text-stone-700 hover:shadow-sm hover:scale-[1.01] active:scale-[0.99]"
+          style={{ '--border-color': '#d6d3d1', '--text-color': '#78716c' }}
+        >
           退出登录
         </Button>
       </section>

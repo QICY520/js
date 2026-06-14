@@ -39,7 +39,7 @@ export default function ShopHome() {
   if (!shop) return null
 
   return (
-    <div className="min-h-screen bg-cream-50 pb-16 max-w-lg mx-auto">
+    <div className="min-h-screen bg-cream-50 pb-16 mall-main">
       <ShopHeader shop={shop} />
       <PromoBanner title={shop.promoNotice} endTime={shop.promoEndTime} />
 

@@ -172,4 +172,32 @@
   .group:hover .nav-icon-shine::after {
     transform: translateX(120%);
   }
+
+  /* 商城响应式容器：手机 → 平板 → PC */
+  .mall-main {
+    @apply w-full mx-auto max-w-lg md:max-w-2xl lg:max-w-4xl;
+  }
+
+  .mall-container {
+    @apply w-full mx-auto max-w-lg md:max-w-2xl lg:max-w-4xl px-4 md:px-6 lg:px-8;
+  }
+
+  /* PC 端商城视口：居中「手机壳」效果 */
+  .mall-viewport {
+    @apply relative min-h-screen w-full;
+  }
+
+  @media (min-width: 1024px) {
+    .mall-viewport {
+      @apply max-w-5xl mx-auto shadow-xl;
+      border-left: 1px solid var(--color-cream-300);
+      border-right: 1px solid var(--color-cream-300);
+      background-color: rgba(253, 252, 249, 0.72);
+    }
+  }
+
+  /* 固定底栏/顶栏内层与内容同宽 */
+  .mall-fixed-inner {
+    @apply w-full mx-auto max-w-lg md:max-w-2xl lg:max-w-4xl;
+  }
 }

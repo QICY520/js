@@ -36,7 +36,7 @@ export default function GlassSearchNav({ onSearch }) {
   return (
     <header className="sticky top-0 z-50">
       <div className="absolute inset-0 bg-cream-50/70 backdrop-blur-2xl border-b border-white/50 shadow-[0_4px_24px_rgba(43,55,40,0.06)]" />
-      <div className="relative max-w-lg mx-auto px-4 pt-safe pt-3 pb-3">
+      <div className="relative mall-container pt-safe pt-3 pb-3">
         <div className="flex items-center gap-3 mb-3">
           <h1 className="text-base font-semibold tracking-tight text-olive-800 shrink-0">
             LUMIÈRE

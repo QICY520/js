@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { Layout, Menu, Avatar, Dropdown, Typography, theme } from 'antd'
+import { Layout, Menu, Avatar, Dropdown, Typography, theme, Grid } from 'antd'
 import {
   ShopOutlined,
   ShoppingCartOutlined,
   HomeOutlined,
   TeamOutlined,
+  AppstoreOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   LogoutOutlined,
@@ -15,9 +16,11 @@ import useAdminStore from '@/admin/store/useAdminStore'
 
 const { Header, Sider, Content } = Layout
 const { Text } = Typography
+const { useBreakpoint } = Grid
 
 const ALL_MENU = [
   { key: '/admin/products', icon: <ShopOutlined />, label: '商品管理', permission: 'product' },
+  { key: '/admin/categories', icon: <AppstoreOutlined />, label: '分类管理', permission: 'category' },
   { key: '/admin/shops', icon: <HomeOutlined />, label: '店铺管理', permission: 'shop' },
   { key: '/admin/orders', icon: <ShoppingCartOutlined />, label: '订单管理', permission: 'order' },
   { key: '/admin/users', icon: <TeamOutlined />, label: '用户管理', permission: 'user' },
@@ -27,10 +30,13 @@ export default function AdminLayout() {
   const navigate = useNavigate()
   const location = useLocation()
   const { token } = theme.useToken()
+  const screens = useBreakpoint()
   const user = useAdminStore((s) => s.user)
   const logout = useAdminStore((s) => s.logout)
   const hasPermission = useAdminStore((s) => s.hasPermission)
   const [collapsed, setCollapsed] = useState(false)
+
+  const isMobile = !screens.lg
 
   const menuItems = ALL_MENU.filter((item) => hasPermission(item.permission))
 
@@ -42,7 +48,7 @@ export default function AdminLayout() {
         label: '退出登录',
         onClick: () => {
           logout()
-          navigate('/login')
+          navigate('/admin/login')
         },
       },
     ],
@@ -54,8 +60,14 @@ export default function AdminLayout() {
         trigger={null}
         collapsible
         collapsed={collapsed}
+        onCollapse={setCollapsed}
+        breakpoint="lg"
+        collapsedWidth={isMobile ? 0 : 80}
         width={220}
         style={{ background: '#2b3728' }}
+        onBreakpoint={(broken) => {
+          if (broken) setCollapsed(true)
+        }}
       >
         <div className="h-16 flex items-center justify-center border-b border-white/10">
           <Text className={`font-semibold text-cream-50 transition-all ${collapsed ? 'text-sm' : 'text-base'}`}>
@@ -67,26 +79,27 @@ export default function AdminLayout() {
           mode="inline"
           selectedKeys={[location.pathname]}
           items={menuItems}
-          onClick={({ key }) => navigate(key)}
+          onClick={({ key }) => {
+            navigate(key)
+            if (isMobile) setCollapsed(true)
+          }}
           style={{ background: 'transparent', borderRight: 0 }}
         />
       </Sider>
 
       <Layout>
         <Header
+          className="flex items-center justify-between border-b border-cream-200 px-4 md:px-6"
           style={{
-            padding: '0 24px',
             background: token.colorBgContainer,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            borderBottom: `1px solid ${token.colorBorderSecondary}`,
+            borderBottomColor: token.colorBorderSecondary,
           }}
         >
           <button
             type="button"
             onClick={() => setCollapsed(!collapsed)}
             className="text-lg text-stone-600 hover:text-olive-700 transition-colors cursor-pointer bg-transparent border-0"
+            aria-label={collapsed ? '展开菜单' : '收起菜单'}
           >
             {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
           </button>
@@ -102,7 +115,7 @@ export default function AdminLayout() {
           </Dropdown>
         </Header>
 
-        <Content style={{ margin: 24, minHeight: 280 }}>
+        <Content className="m-3 sm:m-4 lg:m-6 min-h-[280px]">
           <Outlet />
         </Content>
       </Layout>

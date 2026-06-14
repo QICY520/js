@@ -65,8 +65,8 @@ export default function FlashSale() {
               onClick={() => navigate(`/product/${item.id}`)}
               className="shrink-0 w-24 text-left active:scale-95 transition-transform"
             >
-              <div className="relative rounded-xl overflow-hidden bg-white shadow-md">
-                <Image src={item.image} fit="cover" className="w-24 h-24" lazy />
+              <div className="relative rounded-xl overflow-hidden bg-cream-100 aspect-square w-24">
+                <Image src={item.image} fit="cover" className="!w-full !h-full" lazy />
               </div>
               <p className="mt-1.5 text-sm font-bold text-red-600">
                 ¥{item.price}

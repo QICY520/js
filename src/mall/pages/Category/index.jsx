@@ -57,12 +57,12 @@ export default function CategoryPage() {
   return (
     <MallPageShell>
       <header className="sticky top-0 z-40 bg-cream-50/95 backdrop-blur-xl border-b border-cream-200 pt-safe">
-        <div className="max-w-lg mx-auto px-4 py-3">
+        <div className="mall-container py-3">
           <h1 className="text-base font-semibold text-olive-800">商品分类</h1>
         </div>
       </header>
 
-      <div className="max-w-lg mx-auto flex min-h-[calc(100vh-8rem)]">
+      <div className="mall-main flex min-h-[calc(100vh-8rem)]">
         <div className="w-[88px] shrink-0 bg-cream-100 border-r border-cream-200 [&_.adm-side-bar]:--width:88px">
           <SideBar
             activeKey={activeKey}

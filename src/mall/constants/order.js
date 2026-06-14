@@ -32,6 +32,9 @@ export const PAYMENT_LABELS = {
   balance: '余额支付',
 }
 
+/** 支付二维码（静态资源，见 public/pay-qrcode.jpg） */
+export const PAY_QR_CODE_URL = '/pay-qrcode.jpg'
+
 export function normalizeOrder(raw) {
   if (!raw) return null
   return {

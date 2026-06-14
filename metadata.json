@@ -1,0 +1,9 @@
+{
+  "studentName": "请填写组长姓名",
+  "studentId": "请填写组长学号",
+  "assignmentName": "第四次作业",
+  "members": [
+    { "name": "组员1姓名", "studentId": "学号" },
+    { "name": "组员2姓名", "studentId": "学号" }
+  ]
+}

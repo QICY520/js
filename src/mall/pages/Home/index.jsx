@@ -9,6 +9,7 @@ import FlashSale from '@/mall/components/home/FlashSale'
 import ProductWaterfall from '@/mall/components/ProductWaterfall'
 import { HomePageSkeleton } from '@/mall/components/PageSkeleton'
 import useScrollY from '@/mall/hooks/useScrollY'
+import useCartStore from '@/mall/store/useCartStore'
 import { getProducts } from '@/utils/api'
 
 const HEADER_OFFSET = 'pt-[110px]'
@@ -19,18 +20,20 @@ export default function MallHome() {
   const [theme, setTheme] = useState({ themeRgb: '74, 99, 64' })
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
+  const syncItemImages = useCartStore((s) => s.syncItemImages)
 
   const fetchProducts = useCallback(async () => {
     setLoading(true)
     try {
       const res = await getProducts({ status: 1, pageSize: 50 })
       setProducts(res.data.list)
+      syncItemImages(res.data.list)
     } catch {
       mallToast.fail('加载商品失败，请稍后重试')
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [syncItemImages])
 
   useEffect(() => {
     fetchProducts()
@@ -48,7 +51,7 @@ export default function MallHome() {
         onSearchClick={() => navigate('/search')}
       />
 
-      <main className={`max-w-lg mx-auto ${HEADER_OFFSET}`}>
+      <main className={`mall-main ${HEADER_OFFSET}`}>
         <HomeSwiper onThemeChange={handleThemeChange} />
         <NavGrid />
         <FlashSale />

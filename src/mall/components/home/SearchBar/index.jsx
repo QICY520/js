@@ -59,7 +59,7 @@ export default function SearchBar({ scrollProgress = 0, themeRgb = '74, 99, 64',
       className="fixed top-0 left-0 right-0 z-50 transition-[background,box-shadow] duration-300"
       style={headerStyle}
     >
-      <div className="max-w-lg mx-auto px-4 pt-safe pt-2 pb-2">
+      <div className="mall-container pt-safe pt-2 pb-2">
         <div className="flex items-center gap-2 mb-2">
           <h1 className={`text-[17px] font-semibold tracking-tight shrink-0 transition-colors ${textClass}`}>
             LUMIÈRE

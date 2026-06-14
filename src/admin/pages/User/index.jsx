@@ -35,7 +35,7 @@ const ROLE_FILTER_OPTIONS = [
   { value: 'admin', label: '管理员' },
 ]
 
-const DEFAULT_ADMIN_PERMISSIONS = ['product', 'shop', 'order', 'user']
+const DEFAULT_ADMIN_PERMISSIONS = ['product', 'category', 'shop', 'order', 'user']
 
 export default function UserManagement() {
   const currentAdmin = useAdminStore((s) => s.user)

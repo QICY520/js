@@ -22,7 +22,7 @@ export default function SearchBarHeader({
 
   return (
     <header className="bg-white pt-safe border-b border-cream-200">
-      <div className="max-w-lg mx-auto px-4 pb-3">
+      <div className="mall-container pb-3">
         <div className="flex items-center gap-3 py-2">
           <button
             type="button"

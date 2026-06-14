@@ -109,7 +109,7 @@ export default function ProductDetail() {
     <div className="min-h-screen bg-gray-100 pb-24">
       <ImmersiveHeader onCartClick={handleCartNav} />
 
-      <div className="max-w-lg mx-auto">
+      <div className="mall-main">
         <div className="relative">
           <ProductGallery images={product.images || [product.image]} />
         </div>
