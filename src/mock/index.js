@@ -14,9 +14,8 @@ import {
 } from './productImages'
 import { BANNER_ASSETS } from './productAssetLibrary'
 
-// ─── 仅在开发环境启用 Mock 拦截 ───────────────────────────────
-if (import.meta.env.DEV) {
-  Mock.setup({ timeout: '200-600' })
+// ─── Mock 拦截（开发 + 生产/Vercel 部署均启用，无真实后端） ─────
+Mock.setup({ timeout: '200-600' })
 
   // ─── 工具函数 ─────────────────────────────────────────────
   const success = (data, message = 'success') => ({ code: 0, data, message })
@@ -1499,12 +1498,11 @@ if (import.meta.env.DEV) {
     `[Mock] 数据中心已启动 v${MOCK_DATA_VERSION} · 店铺 ${shops.length} · 商品 ${products.length} · 用户 ${users.length} · 订单 ${orders.length}`,
   )
 
-  if (import.meta.env.DEV) {
-    window.__RESET_MOCK__ = () => {
-      clearMockCache()
-      localStorage.setItem(VERSION_KEY, MOCK_DATA_VERSION)
-      window.location.reload()
-    }
+if (import.meta.env.DEV) {
+  window.__RESET_MOCK__ = () => {
+    clearMockCache()
+    localStorage.setItem(VERSION_KEY, MOCK_DATA_VERSION)
+    window.location.reload()
   }
 }
 
