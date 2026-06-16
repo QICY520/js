@@ -2,24 +2,9 @@ import { useMemo } from 'react'
 import ProductCard from '@/mall/components/ProductCard'
 import Bone from '@/mall/components/PageSkeleton'
 
-function ProductGridSkeleton() {
-  return (
-    <div className="grid grid-cols-2 gap-3">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="rounded-2xl bg-white overflow-hidden border border-cream-200/80">
-          <Bone className="h-40 w-full rounded-none" />
-          <div className="p-3 space-y-2">
-            <Bone className="h-3 w-full" />
-            <Bone className="h-3 w-2/3" />
-            <Bone className="h-5 w-1/3" />
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
 export default function ProductWaterfall({ products, loading }) {
+  const gridClass = 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3'
+
   const [leftCol, rightCol] = useMemo(() => {
     const left = []
     const right = []
@@ -31,7 +16,20 @@ export default function ProductWaterfall({ products, loading }) {
   }, [products])
 
   if (loading && products.length === 0) {
-    return <ProductGridSkeleton />
+    return (
+      <div className={gridClass}>
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="rounded-2xl bg-white overflow-hidden border border-cream-200/80">
+            <Bone className="h-40 w-full rounded-none" />
+            <div className="p-3 space-y-2">
+              <Bone className="h-3 w-full" />
+              <Bone className="h-3 w-2/3" />
+              <Bone className="h-5 w-1/3" />
+            </div>
+          </div>
+        ))}
+      </div>
+    )
   }
 
   if (!loading && !products.length) {
@@ -43,17 +41,26 @@ export default function ProductWaterfall({ products, loading }) {
   }
 
   return (
-    <div className="flex gap-3">
-      <div className="flex-1 min-w-0">
-        {leftCol.map((product) => (
+    <>
+      {/* 手机：双列瀑布流 */}
+      <div className="flex gap-3 md:hidden">
+        <div className="flex-1 min-w-0">
+          {leftCol.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+        <div className="flex-1 min-w-0">
+          {rightCol.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      </div>
+      {/* 平板 / PC：多列网格 */}
+      <div className={`${gridClass} hidden md:grid`}>
+        {products.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
       </div>
-      <div className="flex-1 min-w-0">
-        {rightCol.map((product) => (
-          <ProductCard key={product.id} product={product} />
-        ))}
-      </div>
-    </div>
+    </>
   )
 }

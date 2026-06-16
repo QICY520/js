@@ -113,11 +113,42 @@ const useCartStore = create(
         }))
       },
 
-      /** 清除已选中的商品（支付成功后） */
+      /** 清除已选中的商品（下单待支付 / 支付成功后） */
       removeSelected: () => {
         set((state) => ({
           items: state.items.filter((i) => !i.selected),
         }))
+      },
+
+      /** 用最新商品图覆盖购物车缓存（修复旧图） */
+      syncItemImages: (products = []) => {
+        const imageMap = new Map(products.map((p) => [p.id, p.image]))
+        set((state) => ({
+          items: state.items.map((item) =>
+            imageMap.has(item.productId)
+              ? { ...item, image: imageMap.get(item.productId) }
+              : item,
+          ),
+        }))
+      },
+
+      /** 取消待支付时，将订单商品还原到购物车 */
+      restoreFromOrderItems: (orderItems = []) => {
+        if (!orderItems.length) return
+        set((state) => {
+          const additions = orderItems.map((item, idx) => ({
+            lineKey: `restore-${item.productId}-${Date.now()}-${idx}`,
+            productId: item.productId,
+            title: item.title,
+            price: item.price,
+            image: item.image,
+            quantity: item.quantity,
+            selected: true,
+            stock: 999,
+            categoryId: null,
+          }))
+          return { items: [...state.items, ...additions] }
+        })
       },
 
       /** 获取已选商品 */

@@ -128,7 +128,7 @@ export default function SearchPage() {
         onSearch={doSearch}
       />
 
-      <main className="max-w-lg mx-auto px-4 pt-4 min-h-[calc(100vh-8rem)]">
+      <main className="mall-container pt-4 min-h-[calc(100vh-8rem)]">
         {showSuggest && (
           <SuggestPanel
             keyword={searchKey}

@@ -21,7 +21,7 @@ export default function MessagesPage() {
   return (
     <MallPageShell>
       <NavBar className="bg-white">消息</NavBar>
-      <div className="max-w-lg mx-auto mt-2">
+      <div className="mall-main mt-2">
         <List className="rounded-2xl overflow-hidden mx-3">
           {MOCK_MESSAGES.map((msg) => (
             <List.Item

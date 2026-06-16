@@ -5,10 +5,17 @@ import {
   buildSeedBundle,
   CORE_PRODUCTS,
 } from './seedData'
+import {
+  getProductImage,
+  getProductGallery,
+  getSkuVariantImages,
+  getAvatarImage,
+  syncProductImage,
+} from './productImages'
+import { BANNER_ASSETS } from './productAssetLibrary'
 
-// ─── 仅在开发环境启用 Mock 拦截 ───────────────────────────────
-if (import.meta.env.DEV) {
-  Mock.setup({ timeout: '200-600' })
+// ─── Mock 拦截（开发 + 生产/Vercel 部署均启用，无真实后端） ─────
+Mock.setup({ timeout: '200-600' })
 
   // ─── 工具函数 ─────────────────────────────────────────────
   const success = (data, message = 'success') => ({ code: 0, data, message })
@@ -163,9 +170,9 @@ if (import.meta.env.DEV) {
   const defaultProducts = seed.products
 
   const defaultHomeBanners = [
-    { id: 1, image: 'https://picsum.photos/seed/banner1/800/400', title: '春季新品', subtitle: '焕新衣橱，遇见更好的自己', themeColor: '#4a6340', themeRgb: '74, 99, 64' },
-    { id: 2, image: 'https://picsum.photos/seed/banner2/800/400', title: '数码盛典', subtitle: '旗舰好物，限时特惠', themeColor: '#325a72', themeRgb: '50, 90, 114' },
-    { id: 3, image: 'https://picsum.photos/seed/banner3/800/400', title: '居家美学', subtitle: '打造你的理想生活空间', themeColor: '#57534e', themeRgb: '87, 83, 78' },
+    { id: 1, image: BANNER_ASSETS[0], title: '春季新品', subtitle: '焕新衣橱，遇见更好的自己', themeColor: '#4a6340', themeRgb: '74, 99, 64' },
+    { id: 2, image: BANNER_ASSETS[1], title: '数码盛典', subtitle: '旗舰好物，限时特惠', themeColor: '#325a72', themeRgb: '50, 90, 114' },
+    { id: 3, image: BANNER_ASSETS[2], title: '居家美学', subtitle: '打造你的理想生活空间', themeColor: '#57534e', themeRgb: '87, 83, 78' },
   ]
 
   const defaultNavGrid = [
@@ -226,10 +233,12 @@ if (import.meta.env.DEV) {
 
   // 初始化内存仓库（localStorage 持久化，实现前后台数据联动）
   let categories = loadStore(STORAGE_KEYS.categories, defaultCategories)
-  let products = loadSeedStore(STORAGE_KEYS.products, defaultProducts, SEED_MIN_COUNTS.products).map((p) => ({
-    ...p,
-    shopId: p.shopId || defaultShopIdByProduct[p.id] || 1,
-  }))
+  let products = loadSeedStore(STORAGE_KEYS.products, defaultProducts, SEED_MIN_COUNTS.products).map((p) =>
+    syncProductImage({
+      ...p,
+      shopId: p.shopId || defaultShopIdByProduct[p.id] || 1,
+    }),
+  )
   saveStore(STORAGE_KEYS.products, products)
   let shops = loadSeedStore(STORAGE_KEYS.shops, defaultShops, SEED_MIN_COUNTS.shops)
   let chats = loadStore(STORAGE_KEYS.chats, {})
@@ -237,11 +246,6 @@ if (import.meta.env.DEV) {
   let cart = loadStore(STORAGE_KEYS.cart, [])
   let orders = loadSeedStore(STORAGE_KEYS.orders, defaultOrders, SEED_MIN_COUNTS.orders)
   let users = loadSeedStore(STORAGE_KEYS.users, defaultUsers, SEED_MIN_COUNTS.users)
-    .filter((u) => !['operator', 'test'].includes(u.username))
-    .map((u) => ({
-      ...(['operator', 'test'].includes(u.role) ? { ...u, role: 'admin' } : u),
-      permissions: (u.permissions || []).map((p) => (p === 'category' ? 'shop' : p)),
-    }))
   saveStore(STORAGE_KEYS.users, users)
   let tokens = loadStore(STORAGE_KEYS.tokens, {})
 
@@ -263,6 +267,23 @@ if (import.meta.env.DEV) {
   }
 
   const getProductById = (id) => products.find((p) => p.id === Number(id))
+
+  const syncOrderItemImages = (order) => ({
+    ...order,
+    items: (order.items || []).map((item) => {
+      const product = getProductById(item.productId)
+      if (!product) return item
+      return {
+        ...item,
+        image: product.image,
+        title: product.title,
+        price: product.price,
+      }
+    }),
+  })
+
+  orders = orders.map(syncOrderItemImages)
+  saveStore(STORAGE_KEYS.orders, orders)
 
   const getShopById = (id) => shops.find((s) => s.shopId === Number(id))
 
@@ -299,10 +320,12 @@ if (import.meta.env.DEV) {
     return chats[key]
   }
 
+  const VISUAL_SPEC_KEYS = ['color', 'material', 'type', 'shade', 'strap']
+
   const PRODUCT_SKU_CONFIG = {
     1: {
       groups: [
-        { name: '颜色', key: 'color', values: ['雾霾蓝', '亚麻原色', '炭黑色'], images: { 雾霾蓝: 'https://picsum.photos/seed/shirt-blue/400/400', 亚麻原色: 'https://picsum.photos/seed/shirt-natural/400/400', 炭黑色: 'https://picsum.photos/seed/shirt-black/400/400' } },
+        { name: '颜色', key: 'color', values: ['雾霾蓝', '亚麻原色', '炭黑色'] },
         { name: '尺码', key: 'size', values: ['S', 'M', 'L', 'XL'] },
       ],
       priceAdjust: { size: { XL: 20 } },
@@ -409,7 +432,9 @@ if (import.meta.env.DEV) {
 
     const variantImages = {}
     config.groups.forEach((g) => {
-      if (g.images) variantImages[g.key] = g.images
+      if (VISUAL_SPEC_KEYS.includes(g.key)) {
+        variantImages[g.key] = getSkuVariantImages(product, g.values)
+      }
     })
 
     const cartesian = (arrays) =>
@@ -434,7 +459,9 @@ if (import.meta.env.DEV) {
 
     const getPreviewImg = (specMap) => {
       for (const g of config.groups) {
-        if (g.images && specMap[g.key]) return g.images[specMap[g.key]]
+        if (variantImages[g.key] && specMap[g.key]) {
+          return variantImages[g.key][specMap[g.key]]
+        }
       }
       return product.image
     }
@@ -472,11 +499,7 @@ if (import.meta.env.DEV) {
       shop,
       originalPrice,
       ...skuData,
-      images: [
-        product.image,
-        `https://picsum.photos/seed/p${product.id}b/800/800`,
-        `https://picsum.photos/seed/p${product.id}c/800/800`,
-      ],
+      images: getProductGallery(product),
       promotion: {
         title: product.badgeType === 'promo' ? '618品类周' : '限时特惠',
         label: '热销爆款',
@@ -496,14 +519,14 @@ if (import.meta.env.DEV) {
           {
             id: 1,
             user: '爱***猫',
-            avatar: `https://picsum.photos/seed/r${product.id}a/80/80`,
+            avatar: getAvatarImage(`r${product.id}a`, 80),
             content: `质感很好，${product.title.slice(0, 6)}比想象中更满意，物流也很快！`,
             rating: 5,
           },
           {
             id: 2,
             user: '向***阳',
-            avatar: `https://picsum.photos/seed/r${product.id}b/80/80`,
+            avatar: getAvatarImage(`r${product.id}b`, 80),
             content: '第二次回购了，包装精致，性价比很高，推荐入手。',
             rating: 5,
           },
@@ -553,7 +576,7 @@ if (import.meta.env.DEV) {
       password,
       role: 'user',
       nickname: nickname || username,
-      avatar: `https://picsum.photos/seed/u${newId}/100/100`,
+      avatar: getAvatarImage(`u${newId}`),
       permissions: [],
       createdAt: new Date().toISOString().slice(0, 19).replace('T', ' '),
     }
@@ -604,7 +627,7 @@ if (import.meta.env.DEV) {
   })
 
   // ─── 用户管理（后台） ─────────────────────────────────────────
-  const ALL_PERMISSIONS = ['product', 'shop', 'order', 'user']
+  const ALL_PERMISSIONS = ['product', 'category', 'shop', 'order', 'user']
 
   const sanitizeUser = (user) => {
     if (!user) return null
@@ -617,6 +640,18 @@ if (import.meta.env.DEV) {
 
   const actorCanManageOrders = (actor) =>
     actor?.role === 'admin' && (actor.permissions?.includes('order') ?? false)
+
+  const actorCanManageCategories = (actor) =>
+    actor?.role === 'admin' && (actor.permissions?.includes('category') ?? false)
+
+  const findCategoryNode = (id) => {
+    for (const parent of categories) {
+      if (parent.id === id) return { node: parent, parent: null, isParent: true }
+      const child = parent.children?.find((c) => c.id === id)
+      if (child) return { node: child, parent, isParent: false }
+    }
+    return null
+  }
 
   const countAdmins = () => users.filter((u) => u.role === 'admin').length
 
@@ -645,7 +680,7 @@ if (import.meta.env.DEV) {
     if (isCreate) {
       payload.username = body.username?.trim()
       payload.password = body.password
-      payload.avatar = body.avatar || `https://picsum.photos/seed/u${Date.now()}/100/100`
+      payload.avatar = body.avatar || getAvatarImage(`u${Date.now()}`)
       payload.createdAt = new Date().toISOString().slice(0, 19).replace('T', ' ')
     }
 
@@ -783,19 +818,59 @@ if (import.meta.env.DEV) {
   })
 
   Mock.mock(/\/api\/categories$/, 'post', (options) => {
+    const actor = getUserByToken(parseToken(options))
+    if (!actorCanManageCategories(actor)) return fail('无分类管理权限', 403)
+
     const body = parseBody(options)
+    if (!body.name?.trim()) return fail('分类名称不能为空')
     const newId = Math.max(...flattenCategories().map((c) => c.id), 0) + 1
     if (body.parentId && body.parentId !== 0) {
       const parent = categories.find((c) => c.id === body.parentId)
-      if (parent) {
-        parent.children = parent.children || []
-        parent.children.push({ id: newId, name: body.name, parentId: body.parentId })
-      }
+      if (!parent) return fail('一级分类不存在', 404)
+      parent.children = parent.children || []
+      parent.children.push({ id: newId, name: body.name.trim(), parentId: body.parentId })
     } else {
-      categories.push({ id: newId, name: body.name, parentId: 0, children: [] })
+      categories.push({ id: newId, name: body.name.trim(), parentId: 0, children: [] })
     }
     saveStore(STORAGE_KEYS.categories, categories)
     return success({ id: newId }, '分类创建成功')
+  })
+
+  Mock.mock(/\/api\/categories\/\d+$/, 'put', (options) => {
+    const actor = getUserByToken(parseToken(options))
+    if (!actorCanManageCategories(actor)) return fail('无分类管理权限', 403)
+
+    const id = Number(options.url.match(/\/api\/categories\/(\d+)/)?.[1])
+    const body = parseBody(options)
+    const found = findCategoryNode(id)
+    if (!found) return fail('分类不存在', 404)
+    if (!body.name?.trim()) return fail('分类名称不能为空')
+
+    found.node.name = body.name.trim()
+    saveStore(STORAGE_KEYS.categories, categories)
+    return success(found.node, '分类更新成功')
+  })
+
+  Mock.mock(/\/api\/categories\/\d+$/, 'delete', (options) => {
+    const actor = getUserByToken(parseToken(options))
+    if (!actorCanManageCategories(actor)) return fail('无分类管理权限', 403)
+
+    const id = Number(options.url.match(/\/api\/categories\/(\d+)/)?.[1])
+    const found = findCategoryNode(id)
+    if (!found) return fail('分类不存在', 404)
+
+    const inUse = products.some((p) => p.categoryId === id)
+    if (inUse) return fail('该分类下仍有商品，无法删除')
+
+    if (found.isParent) {
+      if (found.node.children?.length) return fail('请先删除子分类')
+      categories.splice(categories.findIndex((c) => c.id === id), 1)
+    } else {
+      found.parent.children = found.parent.children.filter((c) => c.id !== id)
+    }
+
+    saveStore(STORAGE_KEYS.categories, categories)
+    return success(null, '分类删除成功')
   })
 
   // ─── 商品接口 ───────────────────────────────────────────────
@@ -857,7 +932,11 @@ if (import.meta.env.DEV) {
       stock: body.stock ?? 0,
       categoryId: body.categoryId,
       shopId: body.shopId || 1,
-      image: body.image || `https://picsum.photos/seed/p${newId}/400/400`,
+      image: body.image || getProductImage({
+        id: newId,
+        categoryId: body.categoryId,
+        title: body.title,
+      }),
       status: body.status ?? 1,
       desc: body.desc || '',
     }
@@ -1141,6 +1220,22 @@ if (import.meta.env.DEV) {
     return success(order, '订单创建成功')
   })
 
+  /** 用户取消待支付订单 */
+  Mock.mock(/\/api\/orders\/\d+\/cancel/, 'post', (options) => {
+    const user = getUserByToken(parseToken(options))
+    if (!user) return fail('请先登录', 401)
+    const id = Number(options.url.match(/\/api\/orders\/(\d+)\/cancel/)?.[1])
+    const index = orders.findIndex((o) => o.id === id)
+    if (index === -1) return fail('订单不存在', 404)
+    const order = orders[index]
+    if (user.role === 'user' && order.userId !== user.id) return fail('无权操作', 403)
+    if (order.status !== 0) return fail('仅待支付订单可取消')
+
+    orders.splice(index, 1)
+    saveStore(STORAGE_KEYS.orders, orders)
+    return success(null, '已取消支付')
+  })
+
   Mock.mock(/\/api\/orders\/\d+\/pay/, 'post', (options) => {
     const user = getUserByToken(parseToken(options))
     if (!user) return fail('请先登录', 401)
@@ -1176,7 +1271,7 @@ if (import.meta.env.DEV) {
     const order = orders.find((o) => o.id === id)
     if (!order) return fail('订单不存在', 404)
     if (user.role === 'user' && order.userId !== user.id) return fail('无权操作', 403)
-    if (order.status !== 1 && order.status !== 2) return fail('当前订单不可确认收货')
+    if (order.status !== 2) return fail('当前订单不可确认收货，请等待商家发货')
 
     order.status = 3
     saveStore(STORAGE_KEYS.orders, orders)
@@ -1403,12 +1498,11 @@ if (import.meta.env.DEV) {
     `[Mock] 数据中心已启动 v${MOCK_DATA_VERSION} · 店铺 ${shops.length} · 商品 ${products.length} · 用户 ${users.length} · 订单 ${orders.length}`,
   )
 
-  if (import.meta.env.DEV) {
-    window.__RESET_MOCK__ = () => {
-      clearMockCache()
-      localStorage.setItem(VERSION_KEY, MOCK_DATA_VERSION)
-      window.location.reload()
-    }
+if (import.meta.env.DEV) {
+  window.__RESET_MOCK__ = () => {
+    clearMockCache()
+    localStorage.setItem(VERSION_KEY, MOCK_DATA_VERSION)
+    window.location.reload()
   }
 }
 

@@ -45,6 +45,14 @@ const useOrderStore = create(
         }))
       },
 
+      /** 移除订单（取消待支付等） */
+      removeOrder: (orderId) => {
+        const id = Number(orderId)
+        set((state) => ({
+          orders: state.orders.filter((o) => o.id !== id),
+        }))
+      },
+
       /** 更新订单状态 */
       updateOrderStatus: (orderId, status) => {
         set((state) => ({

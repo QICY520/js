@@ -14,6 +14,7 @@ import {
   message,
   Popconfirm,
   Typography,
+  Grid,
 } from 'antd'
 import { PlusOutlined, SearchOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
 import {
@@ -24,10 +25,18 @@ import {
   updateProduct,
   deleteProduct,
 } from '@/utils/api'
+import {
+  PRODUCT_TITLE_RULES,
+  PRODUCT_PRICE_RULES,
+  PRODUCT_STOCK_RULES,
+  IMAGE_URL_RULES,
+} from '@/mall/constants/validation'
 
 const { Title } = Typography
+const { useBreakpoint } = Grid
 
 export default function ProductManagement() {
+  const screens = useBreakpoint()
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
   const [shops, setShops] = useState([])
@@ -230,14 +239,14 @@ export default function ProductManagement() {
           <Title level={4} className="!mb-0">
             商品管理
           </Title>
-          <Space wrap>
+          <Space wrap className="w-full sm:w-auto">
             <Select
               allowClear
               placeholder="按店铺筛选"
               value={shopFilter || undefined}
               onChange={(val) => setShopFilter(val || '')}
               options={shops.map((s) => ({ value: s.shopId, label: s.shopName }))}
-              style={{ width: 160 }}
+              className="w-full sm:!w-40"
             />
             <Input.Search
               placeholder="搜索商品名称"
@@ -245,7 +254,7 @@ export default function ProductManagement() {
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
               onSearch={(val) => setKeyword(val.trim())}
-              style={{ width: 240 }}
+              className="w-full sm:!w-60"
               enterButton={<SearchOutlined />}
             />
             <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
@@ -272,14 +281,14 @@ export default function ProductManagement() {
         confirmLoading={submitting}
         okText="保存"
         cancelText="取消"
-        width={520}
+        width={screens.md ? 520 : '92%'}
         destroyOnClose
       >
         <Form form={form} layout="vertical" className="mt-4">
           <Form.Item
             name="title"
             label="商品名称"
-            rules={[{ required: true, message: '请输入商品名称' }]}
+            rules={PRODUCT_TITLE_RULES}
           >
             <Input placeholder="请输入商品名称" maxLength={50} showCount />
           </Form.Item>
@@ -288,7 +297,7 @@ export default function ProductManagement() {
             <Form.Item
               name="price"
               label="价格"
-              rules={[{ required: true, message: '请输入价格' }]}
+              rules={PRODUCT_PRICE_RULES}
               className="flex-1"
             >
               <InputNumber min={0} precision={2} prefix="¥" className="w-full" placeholder="0.00" />
@@ -296,7 +305,7 @@ export default function ProductManagement() {
             <Form.Item
               name="stock"
               label="库存"
-              rules={[{ required: true, message: '请输入库存' }]}
+              rules={PRODUCT_STOCK_RULES}
               className="flex-1"
             >
               <InputNumber min={0} className="w-full" placeholder="0" />
@@ -325,7 +334,7 @@ export default function ProductManagement() {
           <Form.Item
             name="image"
             label="主图 URL"
-            rules={[{ required: true, message: '请输入主图地址' }]}
+            rules={IMAGE_URL_RULES}
           >
             <Input placeholder="https://..." />
           </Form.Item>
@@ -334,7 +343,7 @@ export default function ProductManagement() {
             <Input.TextArea rows={3} placeholder="商品描述" maxLength={200} showCount />
           </Form.Item>
 
-          <Form.Item name="status" label="状态" rules={[{ required: true }]}>
+          <Form.Item name="status" label="状态" rules={[{ required: true, message: '请选择状态' }]}>
             <Select
               options={[
                 { value: 1, label: '上架' },

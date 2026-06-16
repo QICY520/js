@@ -7,7 +7,8 @@ import useAdminStore from '@/admin/store/useAdminStore'
 import { login as loginApi } from '@/utils/api'
 import { isAdminRole } from '@/utils/auth'
 import mallToast from '@/mall/utils/toast'
-import { PASSWORD_RULE, USERNAME_RULES } from '@/mall/constants/validation'
+import { PASSWORD_RULE, USERNAME_RULES, LOGIN_PASSWORD_RULES } from '@/mall/constants/validation'
+import { resolveAuthRedirect } from '@/mall/constants/auth'
 
 const TABS = [
   { key: 'login', label: '登录' },
@@ -18,8 +19,6 @@ export default function AuthPage({ defaultTab = 'login' }) {
   const navigate = useNavigate()
   const location = useLocation()
   const establishMallSession = useMallUserStore((s) => s.establishSession)
-  const establishAdminSession = useAdminStore((s) => s.establishSession)
-  const logoutMall = useMallUserStore((s) => s.logout)
   const logoutAdmin = useAdminStore((s) => s.logout)
   const register = useMallUserStore((s) => s.register)
   const [tab, setTab] = useState(defaultTab)
@@ -35,8 +34,8 @@ export default function AuthPage({ defaultTab = 'login' }) {
   }
 
   const redirectAfterAuth = () => {
-    const from = location.state?.from || '/'
-    setTimeout(() => navigate(from, { replace: true }), 300)
+    const target = resolveAuthRedirect(location.search, location.state?.from)
+    setTimeout(() => navigate(target, { replace: true }), 300)
   }
 
   const handleLogin = async (values) => {
@@ -49,13 +48,8 @@ export default function AuthPage({ defaultTab = 'login' }) {
       const { token, user, role, permissions } = res.data
 
       if (isAdminRole(role)) {
-        logoutMall()
-        establishAdminSession(token, user, role, permissions)
-        mallToast.success('管理员登录成功，正在进入后台…')
-        const from = location.state?.from
-        const adminTarget =
-          from && from.startsWith('/admin') && from !== '/admin/forbidden' ? from : '/admin/products'
-        setTimeout(() => navigate(adminTarget, { replace: true }), 300)
+        mallToast.info('管理员请使用后台登录入口')
+        setTimeout(() => navigate('/admin/login', { state: { from: location.state?.from } }), 600)
         return
       }
 
@@ -97,7 +91,7 @@ export default function AuthPage({ defaultTab = 'login' }) {
       <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-olive-200/30 blur-3xl" />
       <div className="absolute bottom-20 -left-16 w-48 h-48 rounded-full bg-sea-200/25 blur-3xl" />
 
-      <div className="relative flex flex-col min-h-screen max-w-lg mx-auto px-6 py-10">
+      <div className="relative flex flex-col min-h-screen mall-container py-10">
         {/* 品牌区 */}
         <div className="text-center mt-8 mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-olive-700 text-cream-50 text-xl font-bold shadow-lg shadow-olive-900/20 mb-4">
@@ -135,7 +129,6 @@ export default function AuthPage({ defaultTab = 'login' }) {
                   form={loginForm}
                   layout="vertical"
                   onFinish={handleLogin}
-                  initialValues={{ username: 'user' }}
                   footer={
                     <Button
                       block
@@ -154,14 +147,14 @@ export default function AuthPage({ defaultTab = 'login' }) {
                   <Form.Item
                     name="username"
                     label="用户名"
-                    rules={[{ required: true, message: '请输入用户名' }]}
+                    rules={USERNAME_RULES}
                   >
                     <Input placeholder="请输入用户名" clearable prefix={<UserOutline />} />
                   </Form.Item>
                   <Form.Item
                     name="password"
                     label="密码"
-                    rules={[{ required: true, message: '请输入密码' }]}
+                    rules={LOGIN_PASSWORD_RULES}
                   >
                     <Input type="password" placeholder="请输入密码" clearable prefix={<LockOutline />} />
                   </Form.Item>
@@ -250,24 +243,6 @@ export default function AuthPage({ defaultTab = 'login' }) {
                 </Form>
               )}
 
-              {tab === 'login' && (
-                <div className="mt-5 pt-4 border-t border-cream-200 space-y-2">
-                  <p className="text-xs text-stone-400">演示账号</p>
-                  <p className="text-xs text-stone-500">
-                    商城用户：
-                    <code className="bg-cream-100 px-1.5 py-0.5 rounded ml-1">user</code>
-                    {' / '}
-                    <code className="bg-cream-100 px-1.5 py-0.5 rounded">123456</code>
-                  </p>
-                  <p className="text-xs text-stone-500">
-                    管理员：
-                    <code className="bg-cream-100 px-1.5 py-0.5 rounded ml-1">admin</code>
-                    {' / '}
-                    <code className="bg-cream-100 px-1.5 py-0.5 rounded">admin123</code>
-                    <span className="text-stone-400 ml-1">（登录后进入后台）</span>
-                  </p>
-                </div>
-              )}
             </div>
           </div>
 
@@ -291,7 +266,18 @@ export default function AuthPage({ defaultTab = 'login' }) {
         </div>
 
         <p className="text-center text-xs text-stone-400 pb-4">
-          登录后自动识别身份：普通用户进入商城，管理员进入后台
+          {tab === 'login' && (
+            <>
+              管理员请前往
+              <button
+                type="button"
+                onClick={() => navigate('/admin/login')}
+                className="text-olive-600 ml-1 underline-offset-2 hover:underline"
+              >
+                后台登录
+              </button>
+            </>
+          )}
         </p>
       </div>
     </div>

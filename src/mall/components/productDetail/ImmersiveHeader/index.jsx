@@ -18,7 +18,7 @@ export default function ImmersiveHeader({ onCartClick }) {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 pt-safe pointer-events-none">
-      <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between pointer-events-auto">
+      <div className="mall-container py-3 flex items-center justify-between pointer-events-auto">
         <button type="button" onClick={() => navigate(-1)} className={iconBtn} aria-label="返回">
           <LeftOutline fontSize={20} />
         </button>

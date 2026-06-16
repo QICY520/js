@@ -49,7 +49,7 @@ export default function PaySuccessPage() {
         支付结果
       </NavBar>
 
-      <div className="max-w-lg mx-auto px-4 pt-6">
+      <div className="mall-container pt-6">
         <Result
           status="success"
           title="支付成功"

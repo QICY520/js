@@ -37,7 +37,7 @@ export default function DetailBottomBar({
 
   return (
     <footer className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-cream-200 safe-bottom">
-      <div className="max-w-lg mx-auto flex items-center gap-2 px-3 py-2">
+      <div className="mall-main flex items-center gap-2 px-3 py-2">
         <button
           type="button"
           className={sideBtn}

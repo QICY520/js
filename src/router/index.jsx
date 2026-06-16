@@ -3,37 +3,17 @@ import App from '@/App'
 import AuthPage from '@/mall/pages/Auth'
 import MallGuestGuard from '@/mall/components/MallGuestGuard'
 import MallAuthGuard from '@/mall/components/MallAuthGuard'
-import MallHome from '@/mall/pages/Home'
-import SearchPage from '@/mall/pages/Search'
-import CategoryPage from '@/mall/pages/Category'
-import ProductDetail from '@/mall/pages/ProductDetail'
-import CartPage from '@/mall/pages/Cart'
-import MyPage from '@/mall/pages/My'
-import MessagesPage from '@/mall/pages/Messages'
-import AddressesPage from '@/mall/pages/Addresses'
-import CreateOrderPage from '@/mall/pages/CreateOrder'
-import PaySuccessPage from '@/mall/pages/PaySuccess'
-import OrdersPage from '@/mall/pages/Orders'
-import OrderDetailPage from '@/mall/pages/OrderDetail'
-import FlashSalePage from '@/mall/pages/zones/FlashSale'
-import ValueSalePage from '@/mall/pages/zones/ValueSale'
-import RankingPage from '@/mall/pages/zones/Ranking'
-import CouponPage from '@/mall/pages/zones/Coupon'
-import NewArrivalsPage from '@/mall/pages/zones/NewArrivals'
-import LifestylePage from '@/mall/pages/zones/Lifestyle'
-import GiftCardPage from '@/mall/pages/zones/GiftCard'
-import MorePage from '@/mall/pages/zones/More'
 import AdminLayout from '@/admin/components/AdminLayout'
 import AuthGuard, { PermissionGuard } from '@/admin/components/AuthGuard'
+import AdminGuestGuard from '@/admin/components/AdminGuestGuard'
+import AdminLoginPage from '@/admin/pages/Login'
 import AdminIndexRedirect from '@/admin/components/AdminIndexRedirect'
-import ProductManagement from '@/admin/pages/Product'
-import ForbiddenPage from '@/admin/pages/Forbidden'
-import OrderManagement from '@/admin/pages/Order'
-import UserManagement from '@/admin/pages/User'
-import ShopManagement from '@/admin/pages/Shop'
-import ShopHome from '@/mall/pages/Shop/Home'
-import ShopProducts from '@/mall/pages/Shop/Products'
-import ShopChat from '@/mall/pages/Shop/Chat'
+import { lazyRoute } from '@/router/lazyRoute'
+import {
+  HomePageSkeleton,
+  ListPageSkeleton,
+  CategoryPageSkeleton,
+} from '@/mall/components/PageSkeleton'
 
 const router = createBrowserRouter([
   {
@@ -58,7 +38,25 @@ const router = createBrowserRouter([
         ),
       },
 
-      /* ── 商城：全部需登录 ── */
+      /* ── 商城：公用路由（先逛后买，无需登录） ── */
+      { index: true, element: lazyRoute(() => import('@/mall/pages/Home'), HomePageSkeleton) },
+      { path: 'mall', element: lazyRoute(() => import('@/mall/pages/Home'), HomePageSkeleton) },
+      { path: 'search', element: lazyRoute(() => import('@/mall/pages/Search')) },
+      { path: 'category', element: lazyRoute(() => import('@/mall/pages/Category'), CategoryPageSkeleton) },
+      { path: 'product/:id', element: lazyRoute(() => import('@/mall/pages/ProductDetail')) },
+      { path: 'flash-sale', element: lazyRoute(() => import('@/mall/pages/zones/FlashSale')) },
+      { path: 'value-sale', element: lazyRoute(() => import('@/mall/pages/zones/ValueSale')) },
+      { path: 'ranking', element: lazyRoute(() => import('@/mall/pages/zones/Ranking')) },
+      { path: 'coupon', element: lazyRoute(() => import('@/mall/pages/zones/Coupon')) },
+      { path: 'new-arrivals', element: lazyRoute(() => import('@/mall/pages/zones/NewArrivals')) },
+      { path: 'lifestyle', element: lazyRoute(() => import('@/mall/pages/zones/Lifestyle')) },
+      { path: 'gift-card', element: lazyRoute(() => import('@/mall/pages/zones/GiftCard')) },
+      { path: 'more', element: lazyRoute(() => import('@/mall/pages/zones/More')) },
+      { path: 'my', element: lazyRoute(() => import('@/mall/pages/My')) },
+      { path: 'shop/:shopId', element: lazyRoute(() => import('@/mall/pages/Shop/Home')) },
+      { path: 'shop/:shopId/products', element: lazyRoute(() => import('@/mall/pages/Shop/Products')) },
+
+      /* ── 商城：受保护路由（需登录） ── */
       {
         element: (
           <MallAuthGuard>
@@ -66,78 +64,82 @@ const router = createBrowserRouter([
           </MallAuthGuard>
         ),
         children: [
-          { index: true, element: <MallHome /> },
-          { path: 'mall', element: <MallHome /> },
-          { path: 'search', element: <SearchPage /> },
-          { path: 'category', element: <CategoryPage /> },
-          { path: 'product/:id', element: <ProductDetail /> },
-          { path: 'flash-sale', element: <FlashSalePage /> },
-          { path: 'value-sale', element: <ValueSalePage /> },
-          { path: 'ranking', element: <RankingPage /> },
-          { path: 'coupon', element: <CouponPage /> },
-          { path: 'new-arrivals', element: <NewArrivalsPage /> },
-          { path: 'lifestyle', element: <LifestylePage /> },
-          { path: 'gift-card', element: <GiftCardPage /> },
-          { path: 'more', element: <MorePage /> },
-          { path: 'my', element: <MyPage /> },
-          { path: 'messages', element: <MessagesPage /> },
-          { path: 'addresses', element: <AddressesPage /> },
-          { path: 'cart', element: <CartPage /> },
-          { path: 'checkout', element: <CreateOrderPage /> },
-          { path: 'pay/success/:orderId', element: <PaySuccessPage /> },
-          { path: 'orders', element: <OrdersPage /> },
-          { path: 'orders/:id', element: <OrderDetailPage /> },
-          { path: 'shop/:shopId', element: <ShopHome /> },
-          { path: 'shop/:shopId/products', element: <ShopProducts /> },
-          { path: 'shop/:shopId/chat', element: <ShopChat /> },
+          { path: 'messages', element: lazyRoute(() => import('@/mall/pages/Messages')) },
+          { path: 'addresses', element: lazyRoute(() => import('@/mall/pages/Addresses')) },
+          { path: 'cart', element: lazyRoute(() => import('@/mall/pages/Cart')) },
+          { path: 'checkout', element: lazyRoute(() => import('@/mall/pages/CreateOrder')) },
+          { path: 'pay/success/:orderId', element: lazyRoute(() => import('@/mall/pages/PaySuccess')) },
+          { path: 'orders', element: lazyRoute(() => import('@/mall/pages/Orders')) },
+          { path: 'orders/:id', element: lazyRoute(() => import('@/mall/pages/OrderDetail')) },
+          { path: 'shop/:shopId/chat', element: lazyRoute(() => import('@/mall/pages/Shop/Chat')) },
         ],
       },
 
-      /* ── 后台管理（统一登录页鉴权） ── */
+      /* ── 后台管理 ── */
       {
         path: 'admin',
-        element: (
-          <AuthGuard>
-            <Outlet />
-          </AuthGuard>
-        ),
         children: [
-          { index: true, element: <AdminIndexRedirect /> },
-          { path: 'forbidden', element: <ForbiddenPage /> },
           {
-            element: <AdminLayout />,
+            path: 'login',
+            element: (
+              <AdminGuestGuard>
+                <AdminLoginPage />
+              </AdminGuestGuard>
+            ),
+          },
+          {
+            element: (
+              <AuthGuard>
+                <Outlet />
+              </AuthGuard>
+            ),
             children: [
+              { index: true, element: <AdminIndexRedirect /> },
+              { path: 'forbidden', element: lazyRoute(() => import('@/admin/pages/Forbidden')) },
               {
-                path: 'products',
-                element: (
-                  <PermissionGuard permission="product">
-                    <ProductManagement />
-                  </PermissionGuard>
-                ),
-              },
-              {
-                path: 'shops',
-                element: (
-                  <PermissionGuard permission="shop">
-                    <ShopManagement />
-                  </PermissionGuard>
-                ),
-              },
-              {
-                path: 'orders',
-                element: (
-                  <PermissionGuard permission="order">
-                    <OrderManagement />
-                  </PermissionGuard>
-                ),
-              },
-              {
-                path: 'users',
-                element: (
-                  <PermissionGuard permission="user">
-                    <UserManagement />
-                  </PermissionGuard>
-                ),
+                element: <AdminLayout />,
+                children: [
+                  {
+                    path: 'products',
+                    element: (
+                      <PermissionGuard permission="product">
+                        {lazyRoute(() => import('@/admin/pages/Product'))}
+                      </PermissionGuard>
+                    ),
+                  },
+                  {
+                    path: 'categories',
+                    element: (
+                      <PermissionGuard permission="category">
+                        {lazyRoute(() => import('@/admin/pages/Category'))}
+                      </PermissionGuard>
+                    ),
+                  },
+                  {
+                    path: 'shops',
+                    element: (
+                      <PermissionGuard permission="shop">
+                        {lazyRoute(() => import('@/admin/pages/Shop'))}
+                      </PermissionGuard>
+                    ),
+                  },
+                  {
+                    path: 'orders',
+                    element: (
+                      <PermissionGuard permission="order">
+                        {lazyRoute(() => import('@/admin/pages/Order'))}
+                      </PermissionGuard>
+                    ),
+                  },
+                  {
+                    path: 'users',
+                    element: (
+                      <PermissionGuard permission="user">
+                        {lazyRoute(() => import('@/admin/pages/User'))}
+                      </PermissionGuard>
+                    ),
+                  },
+                ],
               },
             ],
           },

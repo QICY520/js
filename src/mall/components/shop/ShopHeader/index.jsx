@@ -30,7 +30,7 @@ export default function ShopHeader({ shop, onFollowChange }) {
 
   return (
     <header className="bg-cream-50/95 backdrop-blur-md border-b border-cream-200">
-      <div className="max-w-lg mx-auto px-4 pt-safe">
+      <div className="mall-container pt-safe">
         <button
           type="button"
           onClick={() => navigate(-1)}

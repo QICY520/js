@@ -1,0 +1,11 @@
+{
+  "studentName": "曹棪",
+  "studentId": "23301002",
+  "assignmentName": "第四次作业",
+  "members": [
+    { "name": "鲍政多", "studentId": "23301001" },
+    { "name": "黄光景", "studentId": "23301004" },
+    { "name": "李依明", "studentId": "23301127" },
+    { "name": "张韶卿", "studentId": "23301085" }
+ ]
+}

@@ -9,7 +9,7 @@ function Bone({ className = '' }) {
 
 export function AuthPageSkeleton() {
   return (
-    <div className="min-h-screen flex flex-col justify-center px-8 max-w-lg mx-auto w-full">
+    <div className="min-h-screen flex flex-col justify-center px-8 mall-main w-full">
       <div className="text-center mb-10 space-y-3">
         <Bone className="h-8 w-32 mx-auto rounded-full" />
         <Bone className="h-4 w-48 mx-auto" />
@@ -26,7 +26,7 @@ export function AuthPageSkeleton() {
 
 export function HomePageSkeleton() {
   return (
-    <div className="max-w-lg mx-auto px-4 pt-4 space-y-4">
+    <div className="mall-container pt-4 space-y-4">
       <Bone className="h-10 w-full rounded-2xl" />
       <Bone className="h-40 w-full rounded-2xl" />
       <div className="grid grid-cols-5 gap-3">

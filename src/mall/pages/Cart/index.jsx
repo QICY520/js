@@ -220,7 +220,7 @@ export default function CartPage() {
 
           {/* 底部结算栏 */}
           <footer className="fixed bottom-16 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-cream-200 px-4 py-3 z-30 shadow-[0_-4px_20px_rgba(0,0,0,0.04)]">
-            <div className="max-w-lg mx-auto flex items-center gap-3">
+            <div className="mall-main flex items-center gap-3">
               <Checkbox
                 checked={allSelected}
                 onChange={(checked) => toggleSelectAll(checked)}

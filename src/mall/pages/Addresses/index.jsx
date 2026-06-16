@@ -13,6 +13,12 @@ import {
 import { AddOutline, EnvironmentOutline } from 'antd-mobile-icons'
 import useAddressStore from '@/mall/store/useAddressStore'
 import { ADDRESS_TAGS, ADDRESS_TAG_COLORS } from '@/mall/constants/address'
+import {
+  ADDRESS_NAME_RULES,
+  ADDRESS_PHONE_RULES,
+  ADDRESS_REGION_RULES,
+  ADDRESS_DETAIL_RULES,
+} from '@/mall/constants/validation'
 import mallToast from '@/mall/utils/toast'
 
 const EMPTY_FORM = { name: '', phone: '', region: '', detail: '', tag: '家', isDefault: false }
@@ -36,19 +42,20 @@ export default function AddressesPage() {
 
   const [formVisible, setFormVisible] = useState(false)
   const [editingId, setEditingId] = useState(null)
-  const [formData, setFormData] = useState(EMPTY_FORM)
+  const [addressForm] = Form.useForm()
 
   /** 打开新增表单 */
   const openAdd = () => {
     setEditingId(null)
-    setFormData(EMPTY_FORM)
+    addressForm.resetFields()
+    addressForm.setFieldsValue(EMPTY_FORM)
     setFormVisible(true)
   }
 
   /** 打开编辑表单 */
   const openEdit = (addr) => {
     setEditingId(addr.id)
-    setFormData({
+    addressForm.setFieldsValue({
       name: addr.name,
       phone: addr.phone,
       region: addr.region,
@@ -60,33 +67,20 @@ export default function AddressesPage() {
   }
 
   /** 提交表单 */
-  const handleSubmit = () => {
-    const { name, phone, region, detail } = formData
-    if (!name || name.length < 2 || name.length > 20) {
-      mallToast.fail('收货人姓名 2-20 位')
-      return
+  const handleSubmit = async () => {
+    try {
+      const values = await addressForm.validateFields()
+      if (editingId) {
+        updateAddress(editingId, values)
+        mallToast.success('地址已更新')
+      } else {
+        addAddress(values)
+        mallToast.success('地址已添加')
+      }
+      setFormVisible(false)
+    } catch {
+      mallToast.info('请完善地址信息')
     }
-    if (!/^1[3-9]\d{9}$/.test(phone)) {
-      mallToast.fail('请输入正确的手机号')
-      return
-    }
-    if (!region) {
-      mallToast.fail('请填写所在地区')
-      return
-    }
-    if (!detail || detail.length < 5) {
-      mallToast.fail('详细地址至少 5 个字')
-      return
-    }
-
-    if (editingId) {
-      updateAddress(editingId, formData)
-      mallToast.success('地址已更新')
-    } else {
-      addAddress(formData)
-      mallToast.success('地址已添加')
-    }
-    setFormVisible(false)
   }
 
   /** 删除确认 */
@@ -119,7 +113,7 @@ export default function AddressesPage() {
         收货地址
       </NavBar>
 
-      <div className="max-w-lg mx-auto px-4 pt-3 space-y-3">
+      <div className="mall-container pt-3 space-y-3">
         {addresses.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-stone-400">
             <EnvironmentOutline fontSize={48} className="mb-3" />
@@ -186,14 +180,14 @@ export default function AddressesPage() {
 
       {/* 新增按钮 */}
       <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-cream-200 px-4 py-3 safe-bottom">
-        <div className="max-w-lg mx-auto">
+        <div className="mall-main">
           <Button
             block
             shape="rounded"
             onClick={openAdd}
             style={{ '--background': '#4a6340' }}
           >
-            <AddOutline fontSize={18} className="mr-1" />
+            <AddOutline className="mr-1" />
             新增收货地址
           </Button>
         </div>
@@ -214,49 +208,24 @@ export default function AddressesPage() {
           {editingId ? '编辑地址' : '新增地址'}
         </h3>
 
-        <Form layout="vertical">
-          <Form.Item label="收货人" required>
-            <Input
-              placeholder="请输入收货人姓名"
-              value={formData.name}
-              onChange={(v) => setFormData((f) => ({ ...f, name: v }))}
-              maxLength={20}
-            />
+        <Form form={addressForm} layout="vertical" initialValues={EMPTY_FORM}>
+          <Form.Item name="name" label="收货人" rules={ADDRESS_NAME_RULES}>
+            <Input placeholder="请输入收货人姓名" maxLength={20} />
           </Form.Item>
-          <Form.Item label="手机号" required>
-            <Input
-              placeholder="请输入手机号"
-              value={formData.phone}
-              onChange={(v) => setFormData((f) => ({ ...f, phone: v }))}
-              maxLength={11}
-              type="tel"
-            />
+          <Form.Item name="phone" label="手机号" rules={ADDRESS_PHONE_RULES}>
+            <Input placeholder="请输入手机号" maxLength={11} type="tel" />
           </Form.Item>
-          <Form.Item label="所在地区" required>
-            <Input
-              placeholder="如：上海市 浦东新区"
-              value={formData.region}
-              onChange={(v) => setFormData((f) => ({ ...f, region: v }))}
-            />
+          <Form.Item name="region" label="所在地区" rules={ADDRESS_REGION_RULES}>
+            <Input placeholder="如：上海市 浦东新区" />
           </Form.Item>
-          <Form.Item label="详细地址" required>
-            <Input
-              placeholder="街道、楼栋、门牌号等"
-              value={formData.detail}
-              onChange={(v) => setFormData((f) => ({ ...f, detail: v }))}
-              maxLength={120}
-            />
+          <Form.Item name="detail" label="详细地址" rules={ADDRESS_DETAIL_RULES}>
+            <Input placeholder="街道、楼栋、门牌号等" maxLength={120} />
           </Form.Item>
-          <Form.Item label="标签">
-            <Radio.Group
-              value={formData.tag}
-              onChange={(v) => setFormData((f) => ({ ...f, tag: v }))}
-            >
+          <Form.Item name="tag" label="标签">
+            <Radio.Group>
               <div className="flex gap-2">
                 {ADDRESS_TAGS.map((tag) => (
-                  <Radio key={tag} value={tag}>
-                    {tag}
-                  </Radio>
+                  <Radio key={tag} value={tag}>{tag}</Radio>
                 ))}
               </div>
             </Radio.Group>

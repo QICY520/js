@@ -31,7 +31,10 @@ function App() {
 
   return (
     <MobileConfigProvider locale={zhCNMobile}>
-        <div className="relative min-h-screen" style={{ backgroundColor: 'rgba(248, 246, 240, 0.55)' }}>
+      <div
+        className="mall-viewport"
+        style={{ backgroundColor: 'rgba(248, 246, 240, 0.55)' }}
+      >
         <Outlet />
         <MallToastHost />
       </div>

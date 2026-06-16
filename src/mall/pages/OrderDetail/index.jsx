@@ -1,15 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { NavBar, Image, Button, DotLoading, Steps } from 'antd-mobile'
+import { NavBar, Image, Button, DotLoading, Steps, Dialog } from 'antd-mobile'
 import useOrderStore from '@/mall/store/useOrderStore'
-import { getOrderById, confirmOrderReceive } from '@/utils/api'
+import useCartStore from '@/mall/store/useCartStore'
+import { getOrderById, confirmOrderReceive, cancelOrder, payOrder } from '@/utils/api'
 import OrderReviewPopup from '@/mall/components/order/OrderReviewPopup'
+import PayOrderPopup from '@/mall/components/order/PayOrderPopup'
+import usePayCountdown from '@/mall/hooks/usePayCountdown'
 import {
   ORDER_STATUS,
   ORDER_STATUS_MAP,
   PAYMENT_LABELS,
   normalizeOrder,
 } from '@/mall/constants/order'
+import { buildLogisticsTimeline } from '@/mall/constants/logistics'
 import mallToast from '@/mall/utils/toast'
 
 export default function OrderDetailPage() {
@@ -17,11 +21,17 @@ export default function OrderDetailPage() {
   const navigate = useNavigate()
   const addOrder = useOrderStore((s) => s.addOrder)
   const updateOrder = useOrderStore((s) => s.updateOrder)
+  const removeOrder = useOrderStore((s) => s.removeOrder)
+  const restoreFromOrderItems = useCartStore((s) => s.restoreFromOrderItems)
   const storeOrder = useOrderStore((s) => s.getOrderById(id))
   const [order, setOrder] = useState(storeOrder || null)
   const [loading, setLoading] = useState(!storeOrder)
   const [reviewVisible, setReviewVisible] = useState(false)
   const [receiving, setReceiving] = useState(false)
+  const [cancelling, setCancelling] = useState(false)
+  const [payVisible, setPayVisible] = useState(false)
+  const [paying, setPaying] = useState(false)
+  const { formatted: payCountdown, expired: payExpired } = usePayCountdown(payVisible)
 
   useEffect(() => {
     getOrderById(id)
@@ -33,6 +43,11 @@ export default function OrderDetailPage() {
       .catch(() => mallToast.fail('订单不存在'))
       .finally(() => setLoading(false))
   }, [id, addOrder])
+
+  const logisticsSteps = useMemo(
+    () => (order ? buildLogisticsTimeline(order) : []),
+    [order],
+  )
 
   const handleConfirmReceive = async () => {
     if (!order) return
@@ -47,6 +62,72 @@ export default function OrderDetailPage() {
       mallToast.fail(err.message || '操作失败')
     } finally {
       setReceiving(false)
+    }
+  }
+
+  const handleCancelPay = async () => {
+    if (!order || cancelling || paying) return
+    const confirmed = await Dialog.confirm({
+      content: '确定取消支付吗？未支付订单将被关闭',
+      confirmText: '取消支付',
+      cancelText: '继续支付',
+    })
+    if (!confirmed) return
+
+    setCancelling(true)
+    try {
+      await cancelOrder(order.id)
+      removeOrder(order.id)
+      restoreFromOrderItems(order.items)
+      setPayVisible(false)
+      mallToast.success('已取消支付，商品已退回购物车')
+      navigate('/cart', { replace: true })
+    } catch (err) {
+      mallToast.fail(err.message || '取消失败')
+    } finally {
+      setCancelling(false)
+    }
+  }
+
+  const handleConfirmPay = async ({ payType, payPassword }) => {
+    if (!order) return
+    if (payExpired) {
+      mallToast.fail('支付已超时，请重新下单')
+      setPayVisible(false)
+      return
+    }
+
+    if (payType === 'password') {
+      if (!payPassword?.trim()) {
+        mallToast.fail('请输入支付密码')
+        return
+      }
+      if (payPassword !== '123456') {
+        mallToast.fail('支付密码错误')
+        return
+      }
+    }
+
+    setPaying(true)
+    mallToast.loading('支付处理中...')
+    try {
+      await new Promise((resolve) => setTimeout(resolve, payType === 'qrcode' ? 800 : 1500))
+      const payRes = await payOrder(order.id, { paymentMethod: order.paymentMethod || 'wechat' })
+      const normalized = normalizeOrder(payRes.data)
+      setOrder(normalized)
+      updateOrder(normalized)
+      setPayVisible(false)
+      mallToast.clear()
+      mallToast.success('支付成功！')
+      navigate(`/pay/success/${order.id}`, {
+        replace: true,
+        state: { paymentMethod: order.paymentMethod || 'wechat', fromPayment: true },
+      })
+    } catch (err) {
+      mallToast.clear()
+      mallToast.fail(err.message || '支付失败')
+    } finally {
+      setPaying(false)
     }
   }
 
@@ -69,7 +150,7 @@ export default function OrderDetailPage() {
         订单详情
       </NavBar>
 
-      <div className="max-w-lg mx-auto px-4 pt-4 space-y-4">
+      <div className="mall-container pt-4 space-y-4">
         <section className="rounded-2xl bg-white p-4 shadow-md">
           <div className="flex items-center justify-between mb-4">
             <span className={`text-sm font-semibold px-3 py-1 rounded-full ${statusInfo.bg} ${statusInfo.color}`}>
@@ -100,6 +181,28 @@ export default function OrderDetailPage() {
           ))}
         </section>
 
+        {logisticsSteps.length > 0 && (
+          <section className="rounded-2xl bg-white p-4 shadow-md">
+            <h3 className="text-sm font-semibold text-stone-800 mb-4">
+              {order.status === ORDER_STATUS.PENDING_SHIP ? '发货进度' : '物流信息'}
+            </h3>
+            <Steps direction="vertical" current={0}>
+              {logisticsSteps.map((step) => (
+                <Steps.Step
+                  key={`${step.time}-${step.status}`}
+                  title={step.status}
+                  description={
+                    <div className="text-xs text-stone-500 space-y-0.5">
+                      <p>{step.detail}</p>
+                      <p className="text-stone-400">{step.time}</p>
+                    </div>
+                  }
+                />
+              ))}
+            </Steps>
+          </section>
+        )}
+
         <section className="rounded-2xl bg-white p-4 shadow-md space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-stone-500">下单时间</span>
@@ -126,8 +229,30 @@ export default function OrderDetailPage() {
         </section>
 
         <div className="flex flex-wrap gap-3">
-          {(order.status === ORDER_STATUS.PENDING_SHIP
-            || order.status === ORDER_STATUS.PENDING_RECEIVE) && (
+          {order.status === ORDER_STATUS.PENDING_PAY && (
+            <>
+              <Button
+                block
+                color="primary"
+                shape="rounded"
+                onClick={() => setPayVisible(true)}
+                style={{ '--background': '#4a6340', flex: '1 1 45%' }}
+              >
+                去支付
+              </Button>
+              <Button
+                block
+                fill="outline"
+                shape="rounded"
+                loading={cancelling}
+                onClick={handleCancelPay}
+                style={{ flex: '1 1 45%' }}
+              >
+                取消支付
+              </Button>
+            </>
+          )}
+          {order.status === ORDER_STATUS.PENDING_RECEIVE && (
             <Button
               block
               color="primary"
@@ -178,6 +303,19 @@ export default function OrderDetailPage() {
             })
             .catch(() => {})
         }}
+      />
+
+      <PayOrderPopup
+        visible={payVisible}
+        amount={order.totalAmount}
+        paymentMethod={order.paymentMethod || 'wechat'}
+        payExpired={payExpired}
+        payCountdown={payCountdown}
+        paying={paying}
+        cancelling={cancelling}
+        onClose={() => setPayVisible(false)}
+        onConfirmPay={handleConfirmPay}
+        onCancelPay={handleCancelPay}
       />
     </div>
   )

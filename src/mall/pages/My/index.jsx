@@ -15,6 +15,7 @@ import {
   RightOutline,
 } from 'antd-mobile-icons'
 import useMallUserStore from '@/mall/store/useMallUserStore'
+import useAuthHydration from '@/mall/hooks/useAuthHydration'
 import useUserStore from '@/mall/store/useUserStore'
 import useOrderStore from '@/mall/store/useOrderStore'
 import { getOrders, getProducts, getShops } from '@/utils/api'
@@ -24,6 +25,17 @@ import MallPageShell from '@/mall/components/MallPageShell'
 import EmptyState from '@/mall/components/my/EmptyState'
 import GuessProductCard from '@/mall/components/my/GuessProductCard'
 import mallToast from '@/mall/utils/toast'
+import { buildLoginPath } from '@/mall/constants/auth'
+
+/** 图标按钮悬浮态 */
+const iconBtnClass =
+  'rounded-xl px-3 py-2 transition-all duration-200 hover:bg-cream-50 hover:scale-105 hover:shadow-sm active:scale-95'
+/** 文字链悬浮态 */
+const textLinkClass =
+  'transition-colors duration-200 hover:text-olive-600'
+/** 列表行悬浮态 */
+const rowHoverClass =
+  'transition-colors duration-200 hover:bg-cream-50 active:bg-cream-100'
 
 const TOP_SHORTCUTS = [
   { key: 'express', label: '快递', icon: TruckOutline, color: '#4a6340' },
@@ -46,6 +58,7 @@ function shuffleProducts(list) {
 
 export default function MyPage() {
   const navigate = useNavigate()
+  const { isLoggedIn } = useAuthHydration()
   const user = useMallUserStore((s) => s.user)
   const logout = useMallUserStore((s) => s.logout)
   const orders = useOrderStore((s) => s.orders)
@@ -63,12 +76,24 @@ export default function MyPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    Promise.all([
-      getOrders().then((res) => syncOrders(res.data.list)).catch(() => {}),
+    const tasks = [
       getProducts({ status: 1, pageSize: 80 }).then((res) => setProducts(res.data.list)),
       getShops().then((res) => setShops(res.data)),
-    ]).finally(() => setLoading(false))
-  }, [syncOrders])
+    ]
+    if (isLoggedIn) {
+      tasks.unshift(getOrders().then((res) => syncOrders(res.data.list)).catch(() => {}))
+    }
+    Promise.all(tasks).finally(() => setLoading(false))
+  }, [syncOrders, isLoggedIn])
+
+  const goLogin = () => navigate(buildLoginPath('/my'))
+
+  const requireLogin = (redirectTo = '/my') => {
+    if (isLoggedIn) return true
+    mallToast.info('请先登录')
+    navigate(buildLoginPath(redirectTo))
+    return false
+  }
 
   const orderCountMap = useMemo(() => {
     const map = {}
@@ -94,6 +119,7 @@ export default function MyPage() {
   )
 
   const handleShortcut = (key) => {
+    if (!requireLogin('/my')) return
     if (key === 'express') {
       navigate(`/orders?status=${ORDER_STATUS.PENDING_RECEIVE}`)
       return
@@ -114,18 +140,17 @@ export default function MyPage() {
   const handleLogout = () => {
     logout()
     mallToast.success('已退出登录')
-    navigate('/login', { replace: true })
+    navigate('/', { replace: true })
   }
 
   const renderGuessGrid = () => {
     if (loading) return <p className="text-center text-stone-400 py-8 text-sm">加载中…</p>
     if (!guessProducts.length) return <EmptyState description="暂无推荐商品" />
-    const left = guessProducts.filter((_, i) => i % 2 === 0)
-    const right = guessProducts.filter((_, i) => i % 2 === 1)
     return (
-      <div className="flex gap-2 px-3">
-        <div className="flex-1 min-w-0">{left.map((p) => <GuessProductCard key={p.id} product={p} />)}</div>
-        <div className="flex-1 min-w-0">{right.map((p) => <GuessProductCard key={p.id} product={p} />)}</div>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 px-3">
+        {guessProducts.map((p) => (
+          <GuessProductCard key={p.id} product={p} />
+        ))}
       </div>
     )
   }
@@ -137,11 +162,11 @@ export default function MyPage() {
     return (
       <div className="px-3 space-y-3">
         {reviews.map((review) => (
-          <article key={review.id} className="rounded-2xl bg-white p-3 border border-cream-200">
+          <article key={review.id} className="rounded-2xl bg-white p-3 border border-cream-200 transition-all duration-200 hover:border-olive-200 hover:shadow-md">
             <button
               type="button"
               onClick={() => navigate(`/product/${review.productId}`)}
-              className="flex gap-3 w-full text-left"
+              className={`flex gap-3 w-full text-left rounded-xl ${rowHoverClass}`}
             >
               <Image src={review.productImage} width={64} height={64} fit="cover" className="rounded-lg shrink-0" />
               <div className="flex-1 min-w-0">
@@ -166,17 +191,16 @@ export default function MyPage() {
           </section>
         )
       }
-      const left = favoriteProducts.filter((_, i) => i % 2 === 0)
-      const right = favoriteProducts.filter((_, i) => i % 2 === 1)
       return (
         <section className="mx-4 mt-3 rounded-2xl bg-white border border-cream-200 overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-cream-100">
             <h3 className="text-sm font-semibold text-stone-800">我的收藏</h3>
-            <button type="button" onClick={() => setPanel(null)} className="text-xs text-stone-400">收起</button>
+            <button type="button" onClick={() => setPanel(null)} className={`text-xs text-stone-400 px-2 py-1 rounded-lg ${textLinkClass}`}>收起</button>
           </div>
-          <div className="flex gap-2 px-3 py-3">
-            <div className="flex-1 min-w-0">{left.map((p) => <GuessProductCard key={p.id} product={p} />)}</div>
-            <div className="flex-1 min-w-0">{right.map((p) => <GuessProductCard key={p.id} product={p} />)}</div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 px-3 py-3">
+            {favoriteProducts.map((p) => (
+              <GuessProductCard key={p.id} product={p} />
+            ))}
           </div>
         </section>
       )
@@ -194,14 +218,14 @@ export default function MyPage() {
         <section className="mx-4 mt-3 rounded-2xl bg-white border border-cream-200 overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-cream-100">
             <h3 className="text-sm font-semibold text-stone-800">关注的店铺</h3>
-            <button type="button" onClick={() => setPanel(null)} className="text-xs text-stone-400">收起</button>
+            <button type="button" onClick={() => setPanel(null)} className={`text-xs text-stone-400 px-2 py-1 rounded-lg ${textLinkClass}`}>收起</button>
           </div>
           {followedShopList.map((shop) => (
             <button
               key={shop.shopId}
               type="button"
               onClick={() => navigate(`/shop/${shop.shopId}`)}
-              className="w-full flex items-center gap-3 px-4 py-3 border-b border-cream-50 last:border-0 active:bg-cream-50"
+              className={`w-full flex items-center gap-3 px-4 py-3 border-b border-cream-50 last:border-0 ${rowHoverClass}`}
             >
               <img src={shop.shopLogo} alt="" className="w-10 h-10 rounded-lg object-cover" />
               <div className="flex-1 text-left min-w-0">
@@ -227,7 +251,7 @@ export default function MyPage() {
         <section className="mx-4 mt-3 rounded-2xl bg-white border border-cream-200 overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-cream-100">
             <h3 className="text-sm font-semibold text-stone-800">浏览足迹</h3>
-            <button type="button" onClick={() => setPanel(null)} className="text-xs text-stone-400">收起</button>
+            <button type="button" onClick={() => setPanel(null)} className={`text-xs text-stone-400 px-2 py-1 rounded-lg ${textLinkClass}`}>收起</button>
           </div>
           <div className="flex gap-2 overflow-x-auto px-3 py-3">
             {footprintProducts.map((p) => (
@@ -235,9 +259,9 @@ export default function MyPage() {
                 key={p.id}
                 type="button"
                 onClick={() => navigate(`/product/${p.id}`)}
-                className="shrink-0 w-20 text-left"
+                className="group shrink-0 w-20 text-left rounded-lg p-1 transition-all duration-200 hover:bg-cream-50 hover:scale-105 active:scale-95"
               >
-                <img src={p.image} alt="" className="w-20 h-20 rounded-lg object-cover" />
+                <img src={p.image} alt="" className="w-20 h-20 rounded-lg object-cover transition-shadow duration-200 group-hover:shadow-md" />
                 <p className="text-[10px] text-stone-600 mt-1 line-clamp-2">¥{p.price}</p>
               </button>
             ))}
@@ -255,24 +279,48 @@ export default function MyPage() {
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-olive-700/90 via-olive-600/60 to-gray-100" />
         <div className="relative px-5 pt-10 pb-6">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full bg-white/20 border-2 border-white/30 flex items-center justify-center overflow-hidden shrink-0">
-              {user?.avatar ? (
-                <Image src={user.avatar} width={56} height={56} fit="cover" className="rounded-full" />
-              ) : (
-                <UserOutline fontSize={24} className="text-white/80" />
-              )}
+          {isLoggedIn ? (
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-full bg-white/20 border-2 border-white/30 flex items-center justify-center overflow-hidden shrink-0">
+                {user?.avatar ? (
+                  <Image src={user.avatar} width={56} height={56} fit="cover" className="rounded-full" />
+                ) : (
+                  <UserOutline fontSize={24} className="text-white/80" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h2 className="text-base font-bold text-white truncate">
+                  {user?.nickname || user?.username || '商城用户'}
+                </h2>
+                <p className="text-[11px] text-white/70 mt-0.5">LUMIÈRE 极简生活美学</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => mallToast.info('设置功能开发中')}
+                className="p-2 rounded-full text-white/80 transition-all duration-200 hover:bg-white/15 hover:text-white hover:scale-110 active:scale-95"
+              >
+                <SetOutline fontSize={20} />
+              </button>
             </div>
-            <div className="flex-1 min-w-0">
-              <h2 className="text-base font-bold text-white truncate">
-                {user?.nickname || user?.username || '商城用户'}
-              </h2>
-              <p className="text-[11px] text-white/70 mt-0.5">LUMIÈRE 极简生活美学</p>
+          ) : (
+            <div className="flex flex-col items-center text-center py-2">
+              <div className="w-16 h-16 rounded-full bg-white/15 border border-white/25 flex items-center justify-center mb-3">
+                <UserOutline fontSize={32} className="text-white/90" />
+              </div>
+              <p className="text-sm text-white/80 mb-4">登录后查看订单、收藏与专属服务</p>
+              <div className="flex gap-3 w-full max-w-xs">
+                <Button
+                  color="primary"
+                  shape="rounded"
+                  className="flex-1 !h-10 !text-sm"
+                  style={{ '--background': '#fdfcf9', '--text-color': '#4a6340' }}
+                  onClick={goLogin}
+                >
+                  登录 / 注册
+                </Button>
+              </div>
             </div>
-            <button type="button" onClick={() => mallToast.info('设置功能开发中')} className="text-white/80">
-              <SetOutline fontSize={20} />
-            </button>
-          </div>
+          )}
         </div>
       </section>
 
@@ -285,9 +333,9 @@ export default function MyPage() {
                 key={key}
                 type="button"
                 onClick={() => handleShortcut(key)}
-                className="flex flex-col items-center gap-1.5 px-2 active:scale-95 transition-transform"
+                className={`group flex flex-col items-center gap-1.5 ${iconBtnClass}`}
               >
-                <span className="relative">
+                <span className="relative transition-transform duration-200 group-hover:scale-110">
                   <Icon fontSize={24} style={{ color }} />
                   {key === 'favorites' && favorites.length > 0 && (
                     <Badge content={favorites.length} style={{ '--color': '#ef4444', position: 'absolute', top: -4, right: -10 }} />
@@ -296,7 +344,7 @@ export default function MyPage() {
                     <Badge content={followedShops.length} style={{ '--color': '#2563eb', position: 'absolute', top: -4, right: -10 }} />
                   )}
                 </span>
-                <span className="text-[11px] text-stone-600">{label}</span>
+                <span className="text-[11px] text-stone-600 group-hover:text-olive-700 transition-colors">{label}</span>
               </button>
             ))}
           </div>
@@ -308,7 +356,11 @@ export default function MyPage() {
         <div className="rounded-2xl bg-white border border-cream-200 px-3 py-4">
           <div className="flex items-center justify-between mb-3 px-1">
             <h3 className="text-sm font-semibold text-stone-800">我的订单</h3>
-            <button type="button" onClick={() => navigate('/orders')} className="flex items-center gap-0.5 text-xs text-stone-400">
+            <button
+              type="button"
+              onClick={() => requireLogin('/orders') && navigate('/orders')}
+              className={`flex items-center gap-0.5 text-xs text-stone-400 px-2 py-1 rounded-lg ${textLinkClass}`}
+            >
               全部订单 <RightOutline fontSize={12} />
             </button>
           </div>
@@ -320,16 +372,16 @@ export default function MyPage() {
                 <button
                   key={entry.key}
                   type="button"
-                  onClick={() => navigate(`/orders?status=${entry.status}`)}
-                  className="flex flex-col items-center gap-1 py-1 flex-1 active:scale-95 transition-transform"
+                  onClick={() => requireLogin(`/orders?status=${entry.status}`) && navigate(`/orders?status=${entry.status}`)}
+                  className={`group flex flex-col items-center gap-1 py-1 flex-1 rounded-xl ${iconBtnClass}`}
                 >
-                  <span className="relative">
+                  <span className="relative transition-transform duration-200 group-hover:scale-110">
                     <Icon fontSize={22} style={{ color: entry.color }} />
                     {count > 0 && (
                       <Badge content={count > 99 ? '99+' : count} style={{ '--color': '#ef4444', position: 'absolute', top: -6, right: -10 }} />
                     )}
                   </span>
-                  <span className="text-[10px] text-stone-600 whitespace-nowrap">{entry.label}</span>
+                  <span className="text-[10px] text-stone-600 whitespace-nowrap group-hover:text-olive-700 transition-colors">{entry.label}</span>
                 </button>
               )
             })}
@@ -352,11 +404,20 @@ export default function MyPage() {
         </div>
       </section>
 
-      <section className="mx-4 pb-4">
-        <Button block fill="outline" shape="rounded" onClick={handleLogout} style={{ '--border-color': '#d6d3d1', '--text-color': '#78716c' }}>
-          退出登录
-        </Button>
-      </section>
+      {isLoggedIn && (
+        <section className="mx-4 pb-4">
+          <Button
+            block
+            fill="outline"
+            shape="rounded"
+            onClick={handleLogout}
+            className="transition-all duration-200 hover:!border-stone-400 hover:!text-stone-700 hover:shadow-sm hover:scale-[1.01] active:scale-[0.99]"
+            style={{ '--border-color': '#d6d3d1', '--text-color': '#78716c' }}
+          >
+            退出登录
+          </Button>
+        </section>
+      )}
     </MallPageShell>
   )
 }

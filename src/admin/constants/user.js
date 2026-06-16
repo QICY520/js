@@ -1,6 +1,7 @@
 /** 后台权限模块 */
 export const PERMISSIONS = [
   { value: 'product', label: '商品管理' },
+  { value: 'category', label: '分类管理' },
   { value: 'shop', label: '店铺管理' },
   { value: 'order', label: '订单管理' },
   { value: 'user', label: '用户管理' },

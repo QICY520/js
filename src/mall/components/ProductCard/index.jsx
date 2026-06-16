@@ -1,5 +1,8 @@
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Image } from 'antd-mobile'
+
+const FALLBACK_IMAGE = '/product-assets/shirt.jpg'
 
 const BADGE_STYLES = {
   self: 'bg-olive-600 text-cream-50',
@@ -11,7 +14,12 @@ const BADGE_STYLES = {
 
 export default function ProductCard({ product }) {
   const navigate = useNavigate()
+  const [imgSrc, setImgSrc] = useState(product.image || FALLBACK_IMAGE)
   const badgeClass = BADGE_STYLES[product.badgeType] || 'bg-olive-600/90 text-cream-50'
+
+  useEffect(() => {
+    setImgSrc(product.image || FALLBACK_IMAGE)
+  }, [product.image])
 
   return (
     <article
@@ -21,13 +29,13 @@ export default function ProductCard({ product }) {
       onKeyDown={(e) => e.key === 'Enter' && navigate(`/product/${product.id}`)}
       className="mb-3 break-inside-avoid rounded-2xl bg-white overflow-hidden shadow-lg shadow-stone-900/8 hover:shadow-xl hover:shadow-olive-900/12 active:scale-[0.98] transition-all duration-300 cursor-pointer border border-cream-200/80"
     >
-      <div className="relative overflow-hidden">
+      <div className="relative aspect-square overflow-hidden bg-cream-100">
         <Image
-          src={product.image}
+          src={imgSrc}
           fit="cover"
           lazy
-          className="w-full rounded-t-2xl"
-          style={{ minHeight: product.id % 3 === 0 ? 180 : product.id % 2 === 0 ? 150 : 165 }}
+          className="!w-full !h-full"
+          onError={() => setImgSrc(FALLBACK_IMAGE)}
         />
         {product.badge && (
           <span

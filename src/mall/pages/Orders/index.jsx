@@ -1,8 +1,9 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { NavBar, CapsuleTabs, Image, Button, Empty } from 'antd-mobile'
+import { NavBar, CapsuleTabs, Image, Button, Empty, Dialog } from 'antd-mobile'
 import useOrderStore from '@/mall/store/useOrderStore'
-import { getOrders, confirmOrderReceive } from '@/utils/api'
+import useCartStore from '@/mall/store/useCartStore'
+import { getOrders, confirmOrderReceive, cancelOrder } from '@/utils/api'
 import MallPageShell from '@/mall/components/MallPageShell'
 import OrderReviewPopup from '@/mall/components/order/OrderReviewPopup'
 import {
@@ -20,6 +21,8 @@ export default function OrdersPage() {
   const orders = useOrderStore((s) => s.orders)
   const syncOrders = useOrderStore((s) => s.syncOrders)
   const updateOrder = useOrderStore((s) => s.updateOrder)
+  const removeOrder = useOrderStore((s) => s.removeOrder)
+  const restoreFromOrderItems = useCartStore((s) => s.restoreFromOrderItems)
 
   const initialTab = searchParams.get('status')
   const isValidTab = ORDER_STATUS_TABS.some((t) => t.key === initialTab)
@@ -27,6 +30,7 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true)
   const [reviewOrder, setReviewOrder] = useState(null)
   const [receivingId, setReceivingId] = useState(null)
+  const [cancellingId, setCancellingId] = useState(null)
 
   useEffect(() => {
     getOrders()
@@ -60,11 +64,33 @@ export default function OrdersPage() {
     setReviewOrder(order)
   }
 
+  const handleCancelPay = async (order, e) => {
+    e?.stopPropagation()
+    const confirmed = await Dialog.confirm({
+      content: '确定取消支付吗？未支付订单将被关闭',
+      confirmText: '取消支付',
+      cancelText: '继续支付',
+    })
+    if (!confirmed) return
+
+    setCancellingId(order.id)
+    try {
+      await cancelOrder(order.id)
+      removeOrder(order.id)
+      restoreFromOrderItems(order.items)
+      mallToast.success('已取消支付，商品已退回购物车')
+    } catch (err) {
+      mallToast.fail(err.message || '取消失败')
+    } finally {
+      setCancellingId(null)
+    }
+  }
+
   return (
     <MallPageShell>
       <NavBar className="bg-white/90 backdrop-blur-md">我的订单</NavBar>
 
-      <div className="max-w-lg mx-auto">
+      <div className="mall-main">
         <CapsuleTabs activeKey={activeTab} onChange={setActiveTab} className="bg-white px-2">
           {ORDER_STATUS_TABS.map((tab) => (
             <CapsuleTabs.Tab title={tab.label} key={tab.key} />
@@ -119,17 +145,27 @@ export default function OrdersPage() {
                     </span>
                     <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                       {order.status === ORDER_STATUS.PENDING_PAY && (
-                        <Button
-                          size="mini"
-                          color="primary"
-                          shape="rounded"
-                          onClick={() => navigate(`/orders/${order.id}`)}
-                        >
-                          去支付
-                        </Button>
+                        <>
+                          <Button
+                            size="mini"
+                            color="primary"
+                            shape="rounded"
+                            onClick={() => navigate(`/orders/${order.id}`)}
+                          >
+                            去支付
+                          </Button>
+                          <Button
+                            size="mini"
+                            fill="outline"
+                            shape="rounded"
+                            loading={cancellingId === order.id}
+                            onClick={(e) => handleCancelPay(order, e)}
+                          >
+                            取消支付
+                          </Button>
+                        </>
                       )}
-                      {(order.status === ORDER_STATUS.PENDING_SHIP
-                        || order.status === ORDER_STATUS.PENDING_RECEIVE) && (
+                      {order.status === ORDER_STATUS.PENDING_RECEIVE && (
                         <Button
                           size="mini"
                           color="primary"

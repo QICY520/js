@@ -2,22 +2,21 @@ import { useNavigate } from 'react-router-dom'
 import { SearchBar } from 'antd-mobile'
 import { LinkOutline, ShopbagOutline, UserCircleOutline } from 'antd-mobile-icons'
 import useCartStore from '@/mall/store/useCartStore'
-import useMallUserStore from '@/mall/store/useMallUserStore'
 import useAuthHydration from '@/mall/hooks/useAuthHydration'
 import mallToast from '@/mall/utils/toast'
+import { buildLoginPath } from '@/mall/constants/auth'
 
 export default function GlassSearchNav({ onSearch }) {
   const navigate = useNavigate()
   const { isLoggedIn, user } = useAuthHydration()
-  const logout = useMallUserStore((s) => s.logout)
   const cartCount = useCartStore((s) =>
     s.items.reduce((sum, i) => sum + i.quantity, 0),
   )
 
   const handleCartClick = () => {
     if (!isLoggedIn) {
-      mallToast.info('请先登录后查看购物车')
-      navigate('/login', { state: { from: '/cart' } })
+      mallToast.info('请先登录')
+      navigate(buildLoginPath('/cart'))
       return
     }
     navigate('/cart')
@@ -25,18 +24,16 @@ export default function GlassSearchNav({ onSearch }) {
 
   const handleUserClick = () => {
     if (isLoggedIn) {
-      logout()
-      mallToast.info('已退出登录')
-      navigate('/login', { replace: true })
-    } else {
-      navigate('/login', { state: { from: '/' } })
+      navigate('/my')
+      return
     }
+    navigate(buildLoginPath('/'))
   }
 
   return (
     <header className="sticky top-0 z-50">
       <div className="absolute inset-0 bg-cream-50/70 backdrop-blur-2xl border-b border-white/50 shadow-[0_4px_24px_rgba(43,55,40,0.06)]" />
-      <div className="relative max-w-lg mx-auto px-4 pt-safe pt-3 pb-3">
+      <div className="relative mall-container pt-safe pt-3 pb-3">
         <div className="flex items-center gap-3 mb-3">
           <h1 className="text-base font-semibold tracking-tight text-olive-800 shrink-0">
             LUMIÈRE

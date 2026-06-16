@@ -9,6 +9,9 @@ export const deleteProduct = (id) => request.delete(`/products/${id}`)
 
 /** 分类 */
 export const getCategories = () => request.get('/categories')
+export const createCategory = (data) => request.post('/categories', data)
+export const updateCategory = (id, data) => request.put(`/categories/${id}`, data)
+export const deleteCategory = (id) => request.delete(`/categories/${id}`)
 
 /** 店铺 */
 export const getShops = () => request.get('/shops')
@@ -67,6 +70,7 @@ export const getOrders = (params) => request.get('/orders', { params })
 export const getOrderById = (id) => request.get(`/orders/${id}`)
 export const createOrder = (data) => request.post('/orders', data)
 export const payOrder = (id, data) => request.post(`/orders/${id}/pay`, data)
+export const cancelOrder = (id) => request.post(`/orders/${id}/cancel`)
 export const confirmOrderReceive = (id) => request.post(`/orders/${id}/receive`)
 export const submitOrderReview = (id, data) => request.post(`/orders/${id}/review`, data)
 export const updateOrderStatus = (id, status) => request.put(`/orders/${id}/status`, { status })

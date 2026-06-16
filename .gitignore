@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 *.zip
+*.jpg
+*.jpeg
+*.png
+*.webp
+public/product-assets/
+public/pay-qrcode.jpg
 第四次作业模板/
 
 # Editor directories and files

@@ -14,7 +14,7 @@ export default function SubPageShell({ title, children, headerClassName = '', da
             : 'bg-cream-50/95 border-cream-200 text-olive-800'
         } ${headerClassName}`}
       >
-        <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
+        <div className="mall-container py-3 flex items-center gap-3">
           <button
             type="button"
             onClick={() => navigate(-1)}
@@ -26,7 +26,7 @@ export default function SubPageShell({ title, children, headerClassName = '', da
           <h1 className="text-base font-semibold">{title}</h1>
         </div>
       </header>
-      <main className="max-w-lg mx-auto">{children}</main>
+      <main className="mall-main">{children}</main>
     </div>
   )
 }

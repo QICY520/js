@@ -19,7 +19,7 @@ export default function ShopTabBar({ shopId }) {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-cream-50/95 backdrop-blur-md border-t border-cream-200 safe-bottom">
-      <div className="max-w-lg mx-auto flex">
+      <div className="mall-main flex">
         {TABS.map(({ key, label, icon: Icon, path }) => {
           const active = activeKey === key
           return (
